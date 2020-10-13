@@ -1,0 +1,114 @@
+{
+    "tip_1": {
+        "subject": "Upgrade/update Fedora26 to 27",
+        "demo_steps": [
+            {"step": "dnf install dnf-plugin-system-upgrade", "out": ""},
+            {"step": "dnf system-upgrade download --refresh --releasever=32 --nogpgcheck", "out": ""},
+            {"step": "dnf system-upgrade reboot", "out": ""},
+            {"step": "dnf --releasever 27 downgrade xen (downgrade xen pkg only)", "out": ""}
+        ],
+        "tags": "fedora, upgrade, update, dnf",
+        "comments": "",
+        "link": ""
+    },
+    "tip_2": {
+        "subject": "Switch system edition",
+        "demo_steps": [
+            {"step": "dnf grouplist -v", "out": ""},
+            {"step": "dnf install @kde-desktop-environment", "out": ""},
+            {"step": "dnf -y group install 'Fedora Workstation'", "out": ""},
+            {"step": "systemctl set-default graphical.target", "out": ""}
+        ],
+        "tags": "fedora, server, dnf, yum",
+        "comments": "",
+        "link": ""
+    },
+    "tip_3": {
+        "subject": "Look for which pkg provides the cmd or file(belong to which pkg)",
+        "demo_steps": [
+            {"step": "dnf provides *stubs-32.h", "out": ""},
+            {"step": "dnf provides isoinfo", "out": ""}
+        ],
+        "tags": "dnf, yum",
+        "comments": "",
+        "link": ""
+    },
+    "tip_4": {
+        "subject": "Repair broken pkgs",
+        "demo_steps": [
+            {"step": "dnf reinstall \\*", "out": ""}
+        ],
+        "tags": "dnf, yum",
+        "comments": "remove one slash when run cmd",
+        "link": ""
+    },
+    "tip_5": {
+        "subject": "Grubby to update boot index and parameters",
+        "demo_steps": [
+            {"step": "grubby --info=ALL" , "out": ""},
+            {"step": "grubby --set-default-index=1", "out": ""},
+            {"step": "grubby --default-index", "out": ""},
+            {"step": "grubby --default-kernel", "out": ""},
+            {"step": "grubby --update-kernel=ALL --args='initcall_blacklist=arm_smmu_driver_init'", "out": ""},
+            {"step": "grubby --update-kernel=ALL --remove-args='initcall_blacklist=arm_smmu_driver_init'", "out": ""},
+            {"step": "grubby --update-kernel=ALL --args='irqchip.gicv3_pseudo_nmi=1'", "out": ""},
+            {"step": "grubby --update-kernel=ALL  --remove-args='emergency'", "out": ""},
+            {"step": "grubby --update-kernel=ALL  --remove-args='xen_emul_unplug=unnecessary'", "out": ""},
+            {"step": "grubby --update-kernel=ALL --args='xen_emul_unplug=unnecessary'", "out": ""},
+            {"step": "grubby --update-kernel=ALL --args='xen_emul_unplug=never'", "out": ""},
+            {"step": "grubby --update-kernel=ALL --args='no_console_suspend'", "out": ""},
+            {"step": "grubby --update-kernel=ALL --args='kmemleak=on'", "out": ""},
+            {"step": "grubby --update-kernel=ALL  --remove-args='kmemleak=on'", "out": ""},
+            {"step": "grubby --update-kernel=ALL --args='intel_iommu=on pci=realloc'", "out": ""}
+        ],
+        "tags": "grubby, boot",
+        "comments": "",
+        "link": "https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/system_administrators_guide/sec-making_persistent_changes_to_a_grub_2_menu_using_the_grubby_tool"
+    },
+    "tip_6": {
+        "subject": "Boot from grub manually",
+        "demo_steps": [
+            {"step": "insmod lvm", "out": ""},
+            {"step": "linux16 (hd0,msdos1)/vmlinuz-5.0.3-300.fc30.x86_64 root=/dev/mapper/fedora_wasa-root ro rd.lvm.lv=fedora_wasa/root", "out": ""},
+            {"step": "initrd16 (hd0,msdos1)/initramfs-5.0.3-300.fc30.x86_64.img", "out": ""},
+            {"step": "set root=(lvm,fedora_wasa-root)/", "out": ""},
+            {"step": "boot", "out": ""}
+        ],
+        "tags": "grub, boot",
+        "comments": "useful when boot menu was broken",
+        "link": ""
+    },
+    "tip_7": {
+        "subject": "Check memory leak",
+        "demo_steps": [
+            {"step": "mount -t debugfs nodev /sys/kernel/debug/", "out": ""},
+            {"step": "echo scan > /sys/kernel/debug/kmemleak", "out": ""},
+            {"step": "cat /sys/kernel/debug/kmemleak", "out": ""}
+        ],
+        "tags": "debug, memleaks",
+        "comments": "debug kernel boot required",
+        "link": ""
+    },
+    "tip_8": {
+        "subject": "Setup nfs, export nfs",
+        "demo_steps": [
+            {"step": "yum install -y nfs-utils", "out": ""},
+            {"step": "systemctl enable --now rpcbind nfs-server", "out": ""},
+            {"step": "systemctl  start rpcbind nfs-server", "out": ""},
+            {"step": "exportfs -o ro,insecure_locks,all_squash,fsid=1 *:/", "out": ""},
+            {"step": "echo \"$nfs_ip:/$dir /$target_dir nfs    defaults    0 0\" >>/etc/fstab (automount)", "out": ""}
+        ],
+        "tags": "nfs, systemd",
+        "comments": "",
+        "link": ""
+    },
+    "tip_9": {
+        "subject": "insights-client generate archive only without uploading",
+        "demo_steps": [
+            {"step": "insights-client --no-upload --keep-archive", "out": ""}
+        ],
+        "tags": "insights, insights-client",
+        "comments": "",
+        "link": ""
+    }
+}
