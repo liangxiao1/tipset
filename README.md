@@ -59,30 +59,9 @@ INFO:link:
 
 Please refer to json_parser help guide.
 
-### The log file
-
-The console only shows the case test result as summary.
-The test debug log file are saved in "/tmp/os_tests_result" following case name by default.
-You can change "results_dir" in "cfg/os-tests.yaml" to save log in other place.
-
-Below is an example:
-
-```bash
-# python3 -m unittest -v os_tests.tests.test_general_test.TestGeneralTest.test_change_clocksource
-test_change_clocksource (os_tests.tests.test_general_test.TestGeneralTest) ... ok
-
-----------------------------------------------------------------------
-Ran 1 test in 0.117s
-
-OK
-# ls -l /tmp/os_tests_result/
-total 8
--rw-r--r--. 1 root root 4224 Aug 26 10:11 os_tests.tests.test_general_test.TestGeneralTest.test_change_clocksource.debug
-```
-
 ### The installed files
 
-All test files are located in "tipset" directory.
+All test files are locating in "tipset" directory.
 
 ```bash
 $ pip3 show -f tipset
