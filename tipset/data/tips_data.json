@@ -110,5 +110,86 @@
         "tags": "insights, insights-client",
         "comments": "",
         "link": ""
+    },
+    "tip_10": {
+        "subject": "tcpdump dump traffic on a network",
+        "demo_steps": [
+            {"step": "tcpdump -n -i eth0 esp and udp port 500 and udp port 4500", "out": ""},
+            {"step": "tcpdump -nni ens4 -e icmp[icmptype] == 8", "out": ""},
+            {"step": "tcpdump -nni eth0 icmp", "out": ""}
+        ],
+        "tags": "network, tcpdump, debug",
+        "comments": "",
+        "link": ""
+    },
+    "tip_11": {
+        "subject": "OS shortcuts",
+        "demo_steps": [
+            {"step": "Ctrl+L: Clear the screen. This is similar to running the “clear” command.", "out": ""},
+            {"step": "Ctrl+S: Stop all output to the screen. This is particularly useful when running commands with a lot of long, verbose output, but you don’t want to stop the command itself with Ctrl+C.", "out": ""},
+            {"step": "Ctrl+Q: Resume output to the screen after stopping it with Ctrl+S.", "out": ""},
+            {"step": "Ctrl+A or Home: Go to the beginning of the line.", "out": ""},
+            {"step": "Ctrl+E or End: Go to the end of the line.", "out": ""},
+            {"step": "Alt+B: Go left (back) one word.", "out": ""},
+            {"step": "Ctrl+B: Go left (back) one character.", "out": ""},
+            {"step": "Alt+F: Go right (forward) one word.", "out": ""},
+            {"step": "Ctrl+F: Go right (forward) one character.", "out": ""},
+            {"step": "Ctrl+W: Cut the word before the cursor, adding it to the clipboard.", "out": ""},
+            {"step": "Ctrl+K: Cut the part of the line after the cursor, adding it to the clipboard.", "out": ""},
+            {"step": "Ctrl+U: Cut the part of the line before the cursor, adding it to the clipboard.", "out": ""},
+            {"step": "Ctrl+Y: Paste the last thing you cut from the clipboard. The y here stands for “yank”.", "out": ""},
+            {"step": "Ctrl+R: Recall the last command matching the characters you provide. Press this shortcut and start typing to search your bash history for a command.", "out": ""},
+            {"step": "Ctrl+O: Run a command you found with Ctrl+R.", "out": ""},
+            {"step": "Ctrl+G: Leave history searching mode without running a command.", "out": ""}
+        ],
+        "tags": "cli, shortcut, terminal",
+        "comments": "",
+        "link": ""
+    },
+    "tip_12": {
+        "subject": "Customize qcow2 image",
+        "demo_steps": [
+            {"step": "yum install -y virt-install libvirt-daemon-config-network libvirtd, libguestfs-tools", "out": ""},
+            {"step": "virsh net-start default", "out": ""},
+            {"step": "virt-install --name vmname --memory 2048 --vcpus 2 --disk size=8,bus=virtio --location rhel-7.0-x86_64-dvd.iso --os-variant=rhel7.0", "out": ""},
+            {"step": "export LIBGUESTFS_BACKEND=direct", "out": ""},
+            {"step": "virt-customize -a rhel-guest-image-8.2-290.x86_64.raw --run-command \"echo 'add_drivers+=\\\" xen-netfront xen-blkfront \\\"' > /etc/dracut.conf.d/xen.conf\"", "out": ""},
+            {"step": "virt-customize -a rhel-guest-image-8.2-290.x86_64.raw --run-command \"dracut -f /boot/initramfs-$(rpm -q kernel --qf '%{V}-%{R}.%{arch}\n').img $(rpm -q kernel --qf '%{V}-%{R}.%{arch}\n')\"", "out": ""},
+            {"step": "virt-edit -a rhel-guest-image-8.2-290.x86_64.raw /etc/dracut.conf.d/xen.conf", "out": ""},
+            {"step": "virt-customize -a rhel-guest-image-7.7-261.x86_64.qcow2 --root-password password:redhat --uninstall cloud-init", "out": ""},
+            {"step": "qemu-img info rhel8.AWS", "out": ""},
+            {"step": "qemu-img resize rhel8.AWS 9G", "out": ""}
+        ],
+        "tags": "virt-install, libguestfs, libvirt, iso",
+        "comments": "",
+        "link": ""
+    },
+    "tip_13": {
+        "subject": "register rhel AMI from local image to aws ec2",
+        "demo_steps": [
+            {"step": "qemu-img convert -f qcow2 -O raw rhel-server-7.7-1-x86_64-kvm.qcow2 rhel-server-7.7-1-x86_64-kvm.raw", "out": ""},
+            {"step": "aws s3 cp rhel-server-7.7.1-x86_64-kvm.raw s3://s3-bucket-name", "out": ""},
+            {"step": "aws ec2 import-image --platform Linux --license-type BYOL --no-encrypted --description 'xiliang_7.9gadoc' --architecture x86_64 --disk-containers Format=Raw,UserBucket=\"{S3Bucket=virtqes1,S3Key=rhel-server-ec2-7.9-30.x86_64.raw}\" --region us-east-1", "out": ""}
+        ],
+        "tags": "AMI, ec2, rhel",
+        "comments": "pls check doc for rhel8",
+        "link": "https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html-single/deploying_red_hat_enterprise_linux_7_on_public_cloud_platforms/index?#deploying-a-virtual-machine-on-aws_cloud-content"
+    },
+    "tip_14": {
+        "subject": "find command usage examples",
+        "demo_steps": [
+            {"step": "find -L . -name '*raw' -exec ls -l {} \\;", "out": ""},
+            {"step": "find . -type -f |xargs grep 'wget'", "out": ""},
+            {"step": "find . -name *results.xml* -exec readlink -f  {} \\;", "out": ""},
+            {"step": "find . -mtime +7 -type d -exec ls {} \\;", "out": ""},
+            {"step": "find /dirname -mtime +7 -exec rm -rf {} \\;", "out": ""},
+            {"step": "find /dirname -mtime +7 -exec ls {} \\;", "out": ""},
+            {"step": "find /dirname* -mtime +30 -exec rm -rf {} \\;", "out": ""},
+            {"step": "find /sys/kernel/iommu_groups/ -type l", "out": ""},
+            {"step": "find /path/to/search/ -type f -iname \"*.mp4\" -printf '%s %p\\n'| sort -nr | head -10", "out": ""}
+        ],
+        "tags": "command, find",
+        "comments": "",
+        "link": ""
     }
 }
