@@ -191,5 +191,174 @@
         "tags": "command, find",
         "comments": "",
         "link": ""
+    },
+    "tip_15": {
+        "subject": "ansible examples",
+        "demo_steps": [
+            {"step": "ansible all -m ping -u root", "out": ""},
+            {"step": "ansible all -a \"/bin/echo hellow\"", "out": ""},
+            {"step": "ansible-playbook ans_xen_xl.yml --syntax-check", "out": ""},
+            {"step": "ansible-playbook ans_xen_xl.yml -u root", "out": ""},
+            {"step": "system facts: {{ ansible_default_ipv4.interface }}", "out": ""}
+        ],
+        "tags": "deploy, ansible",
+        "comments": "",
+        "link": "https://github.com/liangxiao1/mini_utils/blob/master/playbooks/ans_xen_xl_f28.yml"
+    },
+    "tip_16": {
+        "subject": "forgot password and reset it",
+        "demo_steps": [
+            {"step": "\"rw init=/bin/bash\" (complete initramfs and start bash on the disk)", "out": ""},
+            {"step": "mount -n -o remount,rw /", "out": ""},
+            {"step": "passwd root", "out": ""},
+            {"step": "/usr/sbin/reboot -f", "out": ""},
+            {"step": "\"rdinit=/bin/sh\" (start shell in initramfs)", "out": ""},
+            {"step": "'rd.break enforcing=0' (fedora)", "out": ""},
+            {"step": "#mount –o remount,rw /sysroot", "out": ""}
+        ],
+        "tags": "password, boot",
+        "comments": "",
+        "link": ""
+    },
+    "tip_17": {
+        "subject": "insights collect data without upload",
+        "demo_steps": [
+            {"step": "insights-client --no-upload --keep-archive", "out": ""}
+        ],
+        "tags": "insights, insights-client",
+        "comments": "",
+        "link": ""
+    },
+    "tip_18": {
+        "subject": "IRC command",
+        "demo_steps": [
+            {"step": "/query nickname (find nickname in global)", "out": ""}
+        ],
+        "tags": "IRC, command",
+        "comments": "",
+        "link": ""
+    },
+    "tip_19": {
+        "subject": "podman quick start",
+        "demo_steps": [
+            {"step": "yum module install container-tools", "out": ""},
+            {"step": "yum install podman", "out": ""},
+            {"step": "podman pull fedora", "out": ""},
+            {"step": "podman images|ps", "out": ""},
+            {"step": "podman run --rm fedora /bin/echo \"Computing for Geeks\" ", "out": ""},
+            {"step": "podman run --rm -it fedora:28 echo \"Hello world!\"", "out": ""},
+            {"step": "podman run -it fedora bash", "out": ""},
+            {"step": "podman rm 7036f575514d", "out": ""}
+        ],
+        "tags": "podman, container",
+        "comments": "",
+        "link": ""
+    },
+    "tip_20": {
+        "subject": "clean journal log over 10days",
+        "demo_steps": [
+            {"step": "journalctl --vacuum-time=10d", "out": ""},
+            {"step": "journalctl --vacuum-size=2G", "out": ""},
+            {"step": "du -hs /var/log/journal", "out": ""}
+        ],
+        "tags": "journal, admin, journalctl",
+        "comments": "journal log size too big in desktop or longterm run server",
+        "link": ""
+    },
+    "tip_21": {
+        "subject": "enable a module, install pkg from av",
+        "demo_steps": [
+            {"step": "yum module list", "out": ""},
+            {"step": "yum module -y reset virt", "out": ""},
+            {"step": "yum module enable virt:8.3 -y", "out": ""}
+        ],
+        "tags": "RHEL, AV, yum, dnf",
+        "comments": "you can not install repo if only add av repo",
+        "link": ""
+    },
+    "tip_22": {
+        "subject": "vi/vim quick reference",
+        "demo_steps": [
+            {"step": "x   - delete current character", "out": ""},
+            {"step": "dw  - delete current word", "out": ""},
+            {"step": "dd  - delete current line", "out": ""},
+            {"step": "5dd - delete five lines", "out": ""},
+            {"step": "d0  - delete to beginning of line", "out": ""},
+            {"step": ":1,.d  - delete to beginning of file", "out": ""},
+            {"step": ":.,$d  - delete to end of file", "out": ""}
+        ],
+        "tags": "vi, vim, shortcuts",
+        "comments": "",
+        "link": ""
+    },
+    "tip_23": {
+        "subject": "ssh login without password",
+        "demo_steps": [
+            {"step": "ssh-keygen", "out": ""},
+            {"step": "ssh-copy-id remoteuser@remoteserver", "out": ""},
+            {"step": "ssh-keyscan remote_servers >> ~/.ssh/known_hosts (option)", "out": ""}
+        ],
+        "tags": "ssh",
+        "comments": "",
+        "link": ""
+    },
+    "tip_24": {
+        "subject": "ausearch check audit log, selinux",
+        "demo_steps": [
+            {"step": "ausearch -m AVC", "out": ""},
+            {"step": "ausearch -m avc -ts today", "out": ""},
+            {"step": "ausearch -m avc -ts recent (last 10 mins)", "out": ""},
+            {"step": "ausearch -m avc -c httpd", "out": ""}
+        ],
+        "tags": "ausearch, selinux",
+        "comments": "",
+        "link": ""
+    },
+    "tip_25": {
+        "subject": "lspci utils",
+        "demo_steps": [
+            {"step": "lspci -nn (display vendor id and names)", "out": ""},
+            {"step": "lspci -n (display vendor id only)", "out": ""}
+        ],
+        "tags": "lspci, pciutils",
+        "comments": "",
+        "link": ""
+    },
+    "tip_26": {
+        "subject": "dmi info from sysfs",
+        "demo_steps": [
+            {"step": "cat /sys/devices/virtual/dmi/id/bios_vendor", "out": "Xen"},
+            {"step": "cat /sys/devices/virtual/dmi/id/product_name", "out": "HVM domU"}
+        ],
+        "tags": "dmi, sysfs",
+        "comments": "",
+        "link": ""
+    },
+    "tip_27": {
+        "subject": "fio command examples",
+        "demo_steps": [
+            {"step": "apt-get update (ubuntu)", "out": ""},
+            {"step": "apt-get install fio (ubuntu)", "out": ""},
+            {"step": "fio --bs=4k --ioengine=libaio --iodepth=16 --filename=/dev/nvme2n1:/dev/nvme1n1 --direct=1 --runtime=300 --numjobs=16 --rw=randread --name=test --group_reporting --gtod_reduce=1", "out": ""},
+            {"step": "taskset -c 1,2 fio --direct=1 --size=90G --bsrange=4k-4k --runtime=600 --numjobs=8 --iodepth_batch_submit=1 --iodepth_batch_complete_min=1  --ioengine=libaio --iodepth=64 --group_reporting=1 --filename=/dev/nvme1n1 --name=test-randread --rw=randread", "out": ""}
+        ],
+        "tags": "fio, storage, performance",
+        "comments": "",
+        "link": ""
+    },
+    "tip_28": {
+        "subject": "pip command examples",
+        "demo_steps": [
+            {"step": "pip freeze > requirements.txt", "out": ""},
+            {"step": "pip install -r requirements.txt", "out": ""},
+            {"step": "pip3 install textblob -i https://pypi.tuna.tsinghua.edu.cn/simple", "out": ""},
+            {"step": "pip --default-timeout=100 install numpy", "out": ""},
+            {"step": "cn mirro: 阿里云 http://mirrors.aliyun.com/pypi/simple/", "out": ""},
+            {"step": "cn mirro: 清华大学 https://pypi.tuna.tsinghua.edu.cn/simple/", "out": ""},
+            {"step": "cn mirro: 中国科技大学 https://pypi.mirrors.ustc.edu.cn/simple/ ", "out": ""}
+        ],
+        "tags": "fio, storage, performance",
+        "comments": "",
+        "link": ""
     }
 }
