@@ -360,5 +360,106 @@
         "tags": "fio, storage, performance",
         "comments": "",
         "link": ""
+    },
+    "tip_29": {
+        "subject": "kernel dynamic debug examples",
+        "demo_steps": [
+            {"step": "echo 8 > /proc/sys/kernel/printk", "out": ""},
+            {"step": "echo 'file drivers/dma/dw/core.c function  dev_vprintk_emit +p' > /sys/kernel/debug/dynamic_debug/control", "out": ""},
+            {"step": "echo 'file tools/perf/tests/code-reading.c func  do_test_code_reading +p' > /sys/kernel/debug/dynamic_debug/control", "out": ""},
+            {"step": "echo 'file tools/perf/tests/* +p' > /sys/kernel/debug/dynamic_debug/control", "out": ""},
+            {"step": "echo 'file drivers/net/ethernet/amazon/ena* +p' > /sys/kernel/debug/dynamic_debug/control", "out": ""},
+            {"step": "echo 'file drivers/net/ethernet/amazon/ena/ena_ethtool.c +p' > /sys/kernel/debug/dynamic_debug/control", "out": ""}
+        ],
+        "tags": "kernel, debug",
+        "comments": "",
+        "link": "https://www.kernel.org/doc/html/v4.11/admin-guide/dynamic-debug-howto.html"
+    },
+    "tip_30": {
+        "subject": "efi boot in current os",
+        "demo_steps": [
+            {"step": "ls -la /sys/firmware/efi", "out": "config_table  efivars  esrt  fw_platform_size  systab  vars"}
+        ],
+        "tags": "efi, boot",
+        "comments": "judge boot method, it is efi boot if dir is not empty",
+        "link": ""
+    },
+    "tip_31": {
+        "subject": "firewall setup, disable selinux if all looks good but not work",
+        "demo_steps": [
+            {"step": "firewall-cmd --zone=public --add-port=80/tcp --permanent", "out": ""},
+            {"step": "firewall-cmd --reload", "out": ""},
+            {"step": "iptables-save |grep 80", "out": ""}
+        ],
+        "tags": "firewall, security",
+        "comments": "",
+        "link": ""
+    },
+    "tip_32": {
+        "subject": "mount, remount with big size",
+        "demo_steps": [
+            {"step": "mount -t tmpfs tmpfs /run -o remount,size=40G", "out": ""},
+            {"step": "mount -t tmpfs tmpfs /tmp -o remount,size=40G", "out": ""},
+            {"step": "echo 'none     /run       tmpfs   defaults,size=60G        0 0' >> /etc/fstab", "out": ""}
+        ],
+        "tags": "mount, command",
+        "comments": "",
+        "link": ""
+    },
+    "tip_33": {
+        "subject": "Deploy xen under fedora",
+        "demo_steps": [
+            {"step": "yum install xen", "out": ""},
+            {"step": "grub2-mkconfig -o /boot/grub2/grub.cfg (do not run it in f32 or above)", "out": ""},
+            {"step": "grep ^menuentry /boot/grub2/grub.cfg | cut -d \"'\" -f2", "out": ""},
+            {"step": "grub2-set-default 'Fedora, with Xen hypervisor'", "out": ""},
+            {"step": "grub2-editenv list", "out": ""},
+            {"step": "grub2-mkconfig -o /boot/grub2/grub.cfg", "out": ""},
+            {"step": "nmcli con show (for Fedora32+, ip will change after set xenbr0)", "out": ""},
+            {"step": "nmcli con add type bridge ifname xenbr0", "out": ""},
+            {"step": "nmcli con add type bridge-slave ifname eno1 master xenbr0", "out": ""},
+            {"step": "nmcli con up xenbr0", "out": ""}
+        ],
+        "tags": "xen, fedora",
+        "comments": "",
+        "link": "https://github.com/liangxiao1/mini_utils/blob/master/playbooks/ans_xen_xl_f28.yml"
+    },
+    "tip_34": {
+        "subject": "Check available loop devices",
+        "demo_steps": [
+            {"step": "losetup -f", "out": ""},
+            {"step": "losetup -a", "out": ""},
+            {"step": "losetup -d /dev/loopn", "out": ""}
+        ],
+        "tags": "loop, losetup",
+        "comments": "",
+        "link": ""
+    },
+    "tip_35": {
+        "subject": "perf command example",
+        "demo_steps": [
+            {"step": "perf top", "out": ""},
+            {"step": "perf record -a -g", "out": ""},
+            {"step": "perf annotate", "out": ""},
+            {"step": "perf report perf.data", "out": ""},
+            {"step": "perf list | grep xfs", "out": ""},
+            {"step": "perf record -a -e kernel:arm_smmu_cmdq_issue_cmdlist sleep 1", "out": ""}
+        ],
+        "tags": "perf, debug",
+        "comments": "know which symbol occupy cpu",
+        "link": ""
+    },
+    "tip_36": {
+        "subject": "fastboot",
+        "demo_steps": [
+            {"step": "yum --showduplicates list kernel", "out": ""},
+            {"step": "yum install -y kernel-4.18.0-80.7.2.el8_0.x86_64 kernel-4.18.0-80.1.2.el8_0.x86_64 kernel-4.18.0-80.4.2.el8_0.x86_64", "out": ""},
+            {"step": "kexec -l /boot/vmlinuz-4.18.0-80.11.2.el8_0.x86_64 --initrd=/boot/initramfs-4.18.0-80.11.2.el8_0.x86_64.img --reuse-cmdline", "out": ""},
+            {"step": "systemctl kexec", "out": ""},
+            {"step": "kexec -e", "out": ""}
+        ],
+        "tags": "boot, fastboot",
+        "comments": "",
+        "link": ""
     }
 }
