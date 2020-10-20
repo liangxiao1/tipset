@@ -5,7 +5,9 @@
             {"step": "dnf install dnf-plugin-system-upgrade", "out": ""},
             {"step": "dnf system-upgrade download --refresh --releasever=32 --nogpgcheck", "out": ""},
             {"step": "dnf system-upgrade reboot", "out": ""},
-            {"step": "dnf --releasever 27 downgrade xen (downgrade xen pkg only)", "out": ""}
+            {"step": "dnf --releasever 27 downgrade xen (downgrade xen pkg only)", "out": ""},
+            {"step": "dnf distro-sync --allowerasing --refresh", "out": ""},
+            {"step": "dnf erase xxx(if distro-sync failed, try to erase the conflict packages)", "out": ""}
         ],
         "tags": "fedora, upgrade, update, dnf",
         "comments": "",
@@ -284,6 +286,7 @@
             {"step": "dd  - delete current line", "out": ""},
             {"step": "5dd - delete five lines", "out": ""},
             {"step": "d0  - delete to beginning of line", "out": ""},
+            {"step": "d$  - delete to end of line", "out": ""},
             {"step": ":1,.d  - delete to beginning of file", "out": ""},
             {"step": ":.,$d  - delete to end of file", "out": ""}
         ],
@@ -459,6 +462,67 @@
             {"step": "kexec -e", "out": ""}
         ],
         "tags": "boot, fastboot",
+        "comments": "",
+        "link": ""
+    },
+    "tip_37": {
+        "subject": "yum repo file template",
+        "demo_steps": [
+            {"step": "[rhel7]\nname=rhel7.5\nbaseurl = xxxx\nenabled=1\ngpgcheck=0\nproxy=http://127.0.0.1:8080 (option)\n", "out": ""}
+        ],
+        "tags": "yum, repo, install",
+        "comments": "/etc/yum.repos.d/xxx.repo",
+        "link": ""
+    },
+    "tip_38": {
+        "subject": "cron jobs",
+        "demo_steps": [
+            {"step": "minute(0~59) hour(0~23) day(month1~31) month(1~12) day(week0~6)", "out": ""},
+            {"step": "*:any value", "out": ""},
+            {"step": ",:value list separator", "out": ""},
+            {"step": "-:range of values", "out": ""},
+            {"step": "/:step values", "out": ""},
+            {"step": "@yearly @annually @monthly @weekly @daily @hourly @reboot", "out": ""},
+            {"step": "0 0 * * * cp /app.db /back/app.db_$(date +\\%Y\\%m\\%d)", "out": ""}
+        ],
+        "tags": "cron, command, crontab",
+        "comments": "",
+        "link": "https://crontab.guru/#*_*_*_*"
+    },
+    "tip_39": {
+        "subject": "python struct write sysfs",
+        "demo_steps": [
+            {"step": "python3 -c 'import os,struct;os.write(os.open(\"/proc/xen/xenbus\", os.O_RDWR), struct.pack(\"<IIII\", 7, 2, 1234, 0))'", "out": ""}
+        ],
+        "tags": "python, struct, sysfs",
+        "comments": "",
+        "link": ""
+    },
+    "tip_40": {
+        "subject": "python pylint code check",
+        "demo_steps": [
+            {"step": "pylint --list-msgs", "out": ""},
+            {"step": "pylint xxx.py --msg-template='{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'", "out": ""},
+            {"step": "pylint --help-msg=C0325", "out": ""}
+        ],
+        "tags": "python, pylint",
+        "comments": "",
+        "link": ""
+    },
+    "tip_41": {
+        "subject": "git tag examples",
+        "demo_steps": [
+            {"step": "git log -S'ret_status=False,' -- utils_lib.py (find keywords from which commit)", "out": ""},
+            {"step": "git diff tag1 tag2", "out": ""},
+            {"step": "git log tag1 tag2", "out": ""},
+            {"step": "git checkout tags/1.1.4", "out": ""},
+            {"step": "git push origin --tags (push all local tags to remote)", "out": ""},
+            {"step": "git push origin v0.0.15 (push only one tag to remote)", "out": ""},
+            {"step": "git tags (list all tags)", "out": ""},
+            {"step": "git tag v0.0.15 (add a new tag)", "out": ""},
+            {"step": "git checkout tags/v0.0.15 -b $newbranch", "out": ""}
+        ],
+        "tags": "git, github, tag",
         "comments": "",
         "link": ""
     }
