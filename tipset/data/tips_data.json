@@ -518,7 +518,7 @@
             {"step": "git checkout tags/1.1.4", "out": ""},
             {"step": "git push origin --tags (push all local tags to remote)", "out": ""},
             {"step": "git push origin v0.0.15 (push only one tag to remote)", "out": ""},
-            {"step": "git tags (list all tags)", "out": ""},
+            {"step": "git tag -l (list all tags)", "out": ""},
             {"step": "git tag v0.0.15 (add a new tag)", "out": ""},
             {"step": "git checkout tags/v0.0.15 -b $newbranch", "out": ""}
         ],
