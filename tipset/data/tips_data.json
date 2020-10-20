@@ -188,7 +188,10 @@
             {"step": "find /dirname -mtime +7 -exec ls {} \\;", "out": ""},
             {"step": "find /dirname* -mtime +30 -exec rm -rf {} \\;", "out": ""},
             {"step": "find /sys/kernel/iommu_groups/ -type l", "out": ""},
-            {"step": "find /path/to/search/ -type f -iname \"*.mp4\" -printf '%s %p\\n'| sort -nr | head -10", "out": ""}
+            {"step": "find /path/to/search/ -type f -iname \"*.mp4\" -printf '%s %p\\n'| sort -nr | head -10 (top 10 size file)", "out": ""},
+            {"step": "find -maxdepth 1 -type f -perm /200 -exec ls -l {} \\; (writable by current user)", "out": ""},
+            {"step": "find -maxdepth 1 -type f -perm /222 -exec ls -l {} \\; (writable by all user)", "out": ""},
+            {"step": "find . -type f -writable", "out": ""}
         ],
         "tags": "command, find",
         "comments": "",
@@ -356,6 +359,7 @@
             {"step": "pip install -r requirements.txt", "out": ""},
             {"step": "pip3 install textblob -i https://pypi.tuna.tsinghua.edu.cn/simple", "out": ""},
             {"step": "pip --default-timeout=100 install numpy", "out": ""},
+            {"step": "python3 -m pip install --user --upgrade pip==19.2.3 (install specific version)", "out": ""},
             {"step": "cn mirro: 阿里云 http://mirrors.aliyun.com/pypi/simple/", "out": ""},
             {"step": "cn mirro: 清华大学 https://pypi.tuna.tsinghua.edu.cn/simple/", "out": ""},
             {"step": "cn mirro: 中国科技大学 https://pypi.mirrors.ustc.edu.cn/simple/ ", "out": ""}
@@ -525,5 +529,83 @@
         "tags": "git, github, tag",
         "comments": "",
         "link": ""
+    },
+    "tip_42": {
+        "subject": "kerberos",
+        "demo_steps": [
+            {"step": "kinit", "out": ""},
+            {"step": "klist", "out": ""},
+            {"step": "kdestroy", "out": ""}
+        ],
+        "tags": "kerberos, kinit",
+        "comments": "/etc/krb5.conf",
+        "link": "https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/system-level_authentication_guide/using_kerberos"
+    },
+    "tip_43": {
+        "subject": "hibernate setup to swap file",
+        "demo_steps": [
+            {"step": "swapoff -a", "out": ""},
+            {"step": "dd if=/dev/zero of=/swap bs=1024 count=2000000", "out": ""},
+            {"step": "chmod 0600 /swap", "out": ""},
+            {"step": "swapon /swap", "out": ""},
+            {"step": "offset= $(filefrag -v /swap| awk '{if($1==\"0:\"){print $4}}')", "out": ""},
+            {"step": "grubby --update-kernel=ALL  --args=\"resume_offset=$offset resume=/dev/nvme0n1p2\"", "out": ""},
+            {"step": "\"/newswap    swap    swap   defaults 0 0\" >> \"/etc/fstab\"", "out": ""},
+            {"step": "systemctl hibernate|suspend", "out": ""}
+        ],
+        "tags": "hibernate, linux",
+        "comments": "",
+        "link": "https://www.kernel.org/doc/html/latest/power/basic-pm-debugging.html\nhttps://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/managing_storage_devices/getting-started-with-swap_managing-storage-devices"
+    },
+    "tip_44": {
+        "subject": "python virtualenv or venv",
+        "demo_steps": [
+            {"step": "pip install virtualenv", "out": ""},
+            {"step": "virtualenv my_venv", "out": ""},
+            {"step": "virtualenv -p python3 my_venv (for python3)", "out": ""},
+            {"step": "python3 -m venv my_venv", "out": ""},
+            {"step": "source my_env/bin/activate", "out": ""},
+            {"step": "deactivate", "out": ""}
+        ],
+        "tags": "python, virtualenv, venv",
+        "comments": "create a standalone python environment",
+        "link": "https://docs.python.org/3/tutorial/venv.html"
+    },
+    "tip_45": {
+        "subject": "shell script code check",
+        "demo_steps": [
+            {"step": "yum install -y shellcheck", "out": ""},
+            {"step": "shellcheck -x -e SC2119 -f gcc check new common/* tests/*/rc tests/*/[0-9]*[0-9]", "out": ""}
+        ],
+        "tags": "shell, bash",
+        "comments": "not all repo has shellcheck rpm by default",
+        "link": "http://rpmfind.net/linux/fedora/linux/releases/32/Everything/x86_64/os/Packages/s/ShellCheck-0.7.0-3.fc32.x86_64.rpm"
+    },
+    "tip_46": {
+        "subject": "sqlite examples",
+        "demo_steps": [
+            {"step": "sqlite3 app.db -cmd \".header on\" \".mode csv\" \".output test.csv\" \"select * from bugs\" (sqlite save data to csv)", "out": ""},
+            {"step": "sqlite3 app.db -cmd \"pragma table_info('bugs')\" \".quit\" (show table structure)", "out": ""},
+            {"step": "sqlite> DROP TABLE bugs; (delete the table named bugs)", "out": ""},
+            {"step": "sqlite> attach 'report_data.db' as d; (copy data from another db)", "out": ""},
+            {"step": "sqlite> INSERT INTO report SELECT * FROM d.report_info;", "out": ""},
+            {"step": "sqlite> UPDATE report SET Comments='' WHERE Comments  IS NULL;", "out": ""},
+            {"step": "sqlite> UPDATE report SET bug_id=NULL where length(bug_id)=0;", "out": ""},
+            {"step": "sqlite> UPDATE report SET pass_rate=CAST(pass_rate as INTEGER);", "out": ""},
+            {"step": "sqlite> update e_c2__report set instance_available_date='' where instance_available_date==\"None\";", "out": ""},
+            {"step": "sqlite> ALTER TABLE bugs RENAME TO temp_bugs; (add or delete column requires alter table in sqlite)", "out": ""},
+            {"step": "sqlite> INSERT INTO bugs(id, item1, item2) SELECT id,item1, item2 FROM temp_bugs;", "out": ""},
+            {"step": "sqlite> PRAGMA foreign_keys=off;", "out": ""},
+            {"step": "sqlite> BEGIN TRANSACTION;", "out": ""},
+            {"step": "sqlite> CREATE TABLE table1 (column1 datatype [ NULL | NOT NULL ],column2 datatype [ NULL | NOT NULL ]);", "out": ""},
+            {"step": "sqlite> COMMIT;", "out": ""},
+            {"step": "sqlite> PRAGMA foreign_keys=on;", "out": ""},
+            {"step": "sqlite> .read create.sql", "out": ""},
+            {"step": "sqlite> .mode csv", "out": ""},
+            {"step": "sqlite> .import /home/test.csv testtable", "out": ""}
+        ],
+        "tags": "sqlite, sql, database",
+        "comments": "",
+        "link": "https://sqlite.org/cli.html"
     }
 }

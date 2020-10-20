@@ -32,7 +32,7 @@ tipset is a colletion of mini tools about various tips under linux.
 ## Enjoy it
 
 There are 2 utils included currently.  
-**tipsearch**: a colletion of tips under linux, get to know the command usage with examples instead of looking for manual.
+**tipsearch**: a colletion of tips under linux, get to know the command usage with examples instead of looking for manual.  
 **json_parser**: convert json to yaml or plain text.
 
 ### **tipsearch** usage

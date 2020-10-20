@@ -6,7 +6,7 @@ setuptools.setup(
     version="0.0.2",
     author="Xiao Liang",
     author_email="xiliang@redhat.com",
-    description="tipset is a colletion of mini tools.",
+    description="tipset is a colletion of mini tools about various tips under linux.",
     long_description=open('README.md').read(),
     long_description_content_type="text/markdown",
     url="https://github.com/liangxiao1/tipset",
