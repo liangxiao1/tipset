@@ -31,6 +31,7 @@ setuptools.setup(
              'console_scripts': [
                  'tipsearch = tipset.tipsearch:main',
                  'json_parser = tipset.json_parser:main',
+                 'pkgone = tipset.pkgone:main',
              ],
          },
 )

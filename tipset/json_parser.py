@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-github : https://github.com/liangxiao1/mini_utils
+github : https://github.com/liangxiao1/tipset
 
 This tool parses ci event message which is json format to yaml and bash format
 for easy access. The only input is ci mesage and the output is job_env.yaml
