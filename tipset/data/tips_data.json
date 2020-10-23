@@ -425,7 +425,8 @@
             {"step": "nmcli con show (for Fedora32+, ip will change after set xenbr0)", "out": ""},
             {"step": "nmcli con add type bridge ifname xenbr0", "out": ""},
             {"step": "nmcli con add type bridge-slave ifname eno1 master xenbr0", "out": ""},
-            {"step": "nmcli con up xenbr0", "out": ""}
+            {"step": "nmcli con up xenbr0", "out": ""},
+            {"step": "nmcli conn delete type ethernet slave-type bridge con-name bridge-xenbr0 ifname enp4s0f0 master xenbr0 (delete)", "out": ""}
         ],
         "tags": "xen, fedora",
         "comments": "",
@@ -607,5 +608,133 @@
         "tags": "sqlite, sql, database",
         "comments": "",
         "link": "https://sqlite.org/cli.html"
+    },
+    "tip_47": {
+        "subject": "ping command examples",
+        "demo_steps": [
+            {"step": "ping -6 fe80::6e0b:84ff:fedf:xxxx%eth0", "out": ""},
+            {"step": "ping -6 2620:52:0:49c4:1213:54ff:fe35:xxxx -I eth0", "out": ""},
+            {"step": "ping 10.xx.xx.xx -c 20 -i .1", "out": ""}
+        ],
+        "tags": "ping, network",
+        "comments": "",
+        "link": ""
+    },
+    "tip_48": {
+        "subject": "iperf command examples",
+        "demo_steps": [
+            {"step": "iperf3 -c 2620:52:0:49c4:1213:54ff:fe35:xxxx -l 1m -P 10", "out": ""},
+            {"step": "iperf3 -c 10.xx.xx.xxx -l 1m -P 10", "out": ""},
+            {"step": "iperf -c xxxx -l 1m -i 2 -P 30 (iperf2 for speed over 25G)", "out": ""}
+        ],
+        "tags": "iperf, network, performance",
+        "comments": "",
+        "link": ""
+    },
+    "tip_49": {
+        "subject": "ip command examples",
+        "demo_steps": [
+            {"step": "ip link set dev eth0 mtu 1500", "out": ""}
+        ],
+        "tags": "ip, network",
+        "comments": "",
+        "link": ""
+    },
+    "tip_50": {
+        "subject": "get cloud-init metadata",
+        "demo_steps": [
+            {"step": "curl http://169.254.169.254/latest/meta-data/", "out": ""},
+            {"step": "curl http://169.254.169.254/latest/dynamic/instance-identity/document", "out": ""},
+            {"step": "curl http://169.254.169.254/latest/meta-data/local-ipv4", "out": ""}
+        ],
+        "tags": "cloud-init, cloud",
+        "comments": "metadata has lots of instance information, eg. ami, instance type, public ip",
+        "link": ""
+    },
+    "tip_51": {
+        "subject": "mdadm Linux Software RAID",
+        "demo_steps": [
+            {"step": "mdadm --examine /dev/nvme1n1 /dev/nvme2n1", "out": ""},
+            {"step": "mdadm --create /dev/md0 --level=0 --raid-devices=2 /dev/nvme1n1 /dev/nvme2n1", "out": ""},
+            {"step": "cat /proc/mdstat", "out": ""},
+            {"step": "watch -n1 cat /proc/mdstat", "out": ""},
+            {"step": "mdadm --detail /dev/md0", "out": ""},
+            {"step": "mkfs.ext4 /dev/md0", "out": ""},
+            {"step": "mdadm --stop /dev/md0", "out": ""},
+            {"step": "mdadm --assemble --scan (reactive raid)", "out": ""}
+        ],
+        "tags": "mdadm, disk, raid",
+        "comments": "",
+        "link": ""
+    },
+    "tip_52": {
+        "subject": "contribute to linux kernel",
+        "demo_steps": [
+            {"step": "git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git", "out": ""},
+            {"step": "git checkout -b upstream/xiliang master", "out": ""},
+            {"step": "scripts/get_maintainer.pl -f arch/x86/events/amd/power.c", "out": ""},
+            {"step": "git format-patch -1 b1c599b8ff80ea79b9f8277a3f9f36a7b0cfedce", "out": ""},
+            {"step": "git send-email --cc linux-kernel@vger.kernel.org --to hpa@zytor.com --cc x86@kernel.org 0001-perf-x86-amd-power-do-not-load-amd-power-module-in-i.patch", "out": ""},
+            {"step": "patch -p1  < file.patch", "out": ""}
+        ],
+        "tags": "kernel, upstream, patch",
+        "comments": "",
+        "link": ""
+    },
+    "tip_53": {
+        "subject": "Compare 2 directories",
+        "demo_steps": [
+            {"step": "diff -rq dir1 dir2", "out": ""}
+        ],
+        "tags": "compare, diff",
+        "comments": "",
+        "link": ""
+    },
+    "tip_54": {
+        "subject": "nmcli examples",
+        "demo_steps": [
+            {"step": "yum install -y nm-connection-editor", "out": ""},
+            {"step": "nmcli connection show eth0", "out": ""},
+            {"step": "nmcli connection modify eth0 connection.autoconnect yes", "out": ""},
+            {"step": "nmcli con add type bond ifname bond0 mode active-backup (mode:802.3ad/balance-alb/balance-tlb/broadcast/active-backup/balance-rr/balance-xor)", "out": ""},
+            {"step": "nmcli connection modify bond0 ipv4.addresses <ip-address>", "out": ""},
+            {"step": "nmcli connection modify bond0 ipv4.method manual", "out": ""},
+            {"step": "nmcli con add type bond-slave ifname eth0 master bond0", "out": ""},
+            {"step": "nmcli con add type bond-slave ifname eth1 master bond0", "out": ""},
+            {"step": "nmcli connection show", "out": ""}
+        ],
+        "tags": "nmcli, command, bond, network",
+        "comments": "https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-network_bonding_using_the_networkmanager_command_line_tool_nmcli",
+        "link": ""
+    },
+    "tip_55": {
+        "subject": "systemd-analyze usage example",
+        "demo_steps": [
+            {"step": "systemd-analyze", "out": ""},
+            {"step": "systemd-analyze blame", "out": ""},
+            {"step": "systemd-analyze security --no-pager choose_repo.service", "out": ""},
+            {"step": "systemd-analyze plot > plot.svg", "out": ""},
+            {"step": "systemd-analyze critical-chain var-lib-nfs-rpc_pipefs.mount", "out": ""}
+        ],
+        "tags": "systemd-analyze, boot, command",
+        "comments": "",
+        "link": "https://wiki.archlinux.org/index.php/Improving_performance/Boot_process"
+    },
+    "tip_56": {
+        "subject": "Soft RoCE",
+        "demo_steps": [
+            {"step": "yum install libibverbs-utils", "out": ""},
+            {"step": "rxe_cfg start", "out": ""},
+            {"step": "rxe_cfg status", "out": ""},
+            {"step": "rxe_cfg add eth0", "out": ""},
+            {"step": "rxe_cfg", "out": ""},
+            {"step": "ibv_devices", "out": ""},
+            {"step": "ibv_rc_pingpong -d rxe0 -g 0 (server)", "out": ""},
+            {"step": "ibv_rc_pingpong -d rxe0 -g 0 <server_management_ip> (client)", "out": ""},
+            {"step": "ibv_devinfo", "out": ""}
+        ],
+        "tags": "InfiniBand, command, IB",
+        "comments": "",
+        "link": ""
     }
 }
