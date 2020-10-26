@@ -237,11 +237,15 @@
     "tip_18": {
         "subject": "IRC command",
         "demo_steps": [
+            {"step": "/join #channel", "out": ""},
+            {"step": "/list [#channel] [-MIN #] [-MAX #] \n/list\n/list -min 5 -max 20 \n/list #mirc\n/list *mirc*", "out": ""},
+            {"step": "/nick nickname Changes your nickname to a new nickname.", "out": ""},
+            {"step": "/part #channel Leaves a channel that you are on.", "out": ""},
             {"step": "/query nickname (find nickname in global)", "out": ""}
         ],
         "tags": "IRC, command",
         "comments": "",
-        "link": ""
+        "link": "https://www.mirc.com/help/html/index.html?basic_irc_commands.html"
     },
     "tip_19": {
         "subject": "podman quick start",
@@ -473,7 +477,7 @@
     "tip_37": {
         "subject": "yum repo file template",
         "demo_steps": [
-            {"step": "[rhel7]\nname=rhel7.5\nbaseurl = xxxx\nenabled=1\ngpgcheck=0\nproxy=http://127.0.0.1:8080 (option)\n", "out": ""}
+            {"step": "[rhel7]\nname=rhel7.5\nbaseurl = xxxx(url or file:///xxxx/BaseOS)\nenabled=1\ngpgcheck=0\nproxy=http://127.0.0.1:8080 (option)\n", "out": ""}
         ],
         "tags": "yum, repo, install",
         "comments": "/etc/yum.repos.d/xxx.repo",
