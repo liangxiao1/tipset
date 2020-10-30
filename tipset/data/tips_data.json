@@ -2,6 +2,7 @@
     "tip_1": {
         "subject": "Upgrade/update Fedora26 to 27",
         "demo_steps": [
+            {"step": "dnf upgrade --refresh", "out": ""},
             {"step": "dnf install dnf-plugin-system-upgrade", "out": ""},
             {"step": "dnf system-upgrade download --refresh --releasever=32 --nogpgcheck", "out": ""},
             {"step": "dnf system-upgrade reboot", "out": ""},
@@ -289,13 +290,16 @@
         "subject": "vi/vim quick reference",
         "demo_steps": [
             {"step": "x   - delete current character", "out": ""},
+            {"step": "3x   - delete 3 characters from current place", "out": ""},
             {"step": "dw  - delete current word", "out": ""},
+            {"step": "3dw  - delete 3 words from currents word", "out": ""},
             {"step": "dd  - delete current line", "out": ""},
             {"step": "5dd - delete five lines", "out": ""},
             {"step": "d0  - delete to beginning of line", "out": ""},
             {"step": "d$  - delete to end of line", "out": ""},
             {"step": ":1,.d  - delete to beginning of file", "out": ""},
-            {"step": ":.,$d  - delete to end of file", "out": ""}
+            {"step": ":.,$d  - delete to end of file", "out": ""},
+            {"step": "Esc;Ctrl+V(moving up and down);Shift+i(input text);Esc (vim insert content to multiline)", "out": ""}
         ],
         "tags": "vi, vim, shortcuts",
         "comments": "",
@@ -738,6 +742,44 @@
             {"step": "ibv_devinfo", "out": ""}
         ],
         "tags": "InfiniBand, command, IB",
+        "comments": "",
+        "link": ""
+    },
+    "tip_57": {
+        "subject": "awscli usage example",
+        "demo_steps": [
+            {"step": "pip install awscli", "out": ""},
+            {"step": "aws configure", "out": ""},
+            {"step": "aws ec2 run-instances --region=us-west-2 --image-id=ami-9fa343e7 --key-name xiliangc5 --instance-type c5.2xlarge  --subnet-id subnet-b4591eef --associate-public-ip-address --placement {\"AvailabilityZone\":\"us-west-2c\"}", "out": ""},
+            {"step": "aws ec2 describe-instances --instance-ids i-xxxxxxxx", "out": ""},
+            {"step": "aws ec2 create-tags --resources i-xxxxxxx --tags Key=Name,Value=xxxxxxx", "out": ""},
+            {"step": "aws ec2 get-console-output --output text --latest --instance-id i-xxxxxx", "out": ""},
+            {"step": "aws ec2 stop-instances --instance-ids i-xxxxxxx --force", "out": ""},
+            {"step": "aws ec2 describe-instances --instance-ids i-0fda302413ef93ad1", "out": ""},
+            {"step": "aws ec2 describe-instances --filters \"Name=instance-type,Values=c5.4xlarge\"", "out": ""},
+            {"step": "aws ec2 create-volume --size 80 --region ap-northeast-1 --availability-zone ap-northeast-1a --volume-type gp2", "out": ""},
+            {"step": "aws ec2 attach-volume --volume-id vol-xxxxxxxx --instance-id i-xxxxxxx--device /dev/xvdb", "out": ""},
+            {"step": "https://signin.aws.amazon.com/switchrole?roleName=xxxx&account=xxxx (switch role from web)", "out": ""},
+            {"step": "aws ec2 describe-images --image-id ami-xxxxxx --query 'Images[].EnaSupport'", "out": ""},
+            {"step": "aws ec2 describe-images --query 'Images[*].{ID:ImageId,Name:Name,Public:Public}' --filters 'Name=name,Values=*JBEAP-7.2.0*'  --region us-west-1", "out": ""},
+            {"step": "aws ec2 describe-images --owners xxxxxx|self --query 'sort_by(Images, &CreationDate)", "out": ""},
+            {"step": "aws ec2 describe-images --owners xxxxxx|self --query 'sort_by(Images, &CreationDate)[*].[CreationDate,Name,ImageId]' --filters \"Name=name,Values=RHEL-7.?*GA*\" --region us-east-1 --output table", "out": ""},
+            {"step": "aws sts assume-role --profile redhat-test --role-arn \"arn:aws:iam::xxxx:role/xxxx\" --role-session-name session-xiliang (siwtch role from cli)", "out": "credentia: aws_access_key_id, aws_secret_access_key, aws_session_token"}
+        ],
+        "tags": "awscli, command, amazon, ec2",
+        "comments": "",
+        "link": ""
+    },
+    "tip_58": {
+        "subject": "rpm find the binary belong to which pkg",
+        "demo_steps": [
+            {"step": "which ls", "out": ""},
+            {"step": "rpm -qf /usr/bin/ls", "out": "coreutils-8.22-24.el7.x86_64"},
+            {"step": "rpm -qi coreutils (query the information of pkg)", "out": ""},
+            {"step": "rpm -qlp *.rpm (list rpm pkg content)", "out": ""},
+            {"step": "rpm -q --changelog kernel (query the changelog of a pkg)", "out": ""}
+        ],
+        "tags": "rpm, query, command",
         "comments": "",
         "link": ""
     }
