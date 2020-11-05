@@ -128,7 +128,8 @@ def main():
     parser.add_argument('--region_skip', dest='region_skip', action='store',
                         help='regions not check, split by comma, default is none', required=False)
     parser.add_argument('--filter_json', dest='filter_json', action='store',
-                        help='{"Name":"name","Values":["*SAP*"]};{"Name":"description","Values":["*Provided by Red Hat*"]}', required=False)
+                        help='{"Name":"name","Values":["*SAP*"]};{"Name": "tag:Name","Values": ["*baseami*"]};{"Name":"description","Values":["*Provided by Red Hat*"]} \
+                            For all supported filed: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html#EC2.Client.describe_images', required=False)
     parser.add_argument('--dir', dest='dir', action='store', default='/tmp',
                         help='save files to dir', required=False)
     parser.add_argument('--tokenfile', dest='tokenfile', action='store', default="data/aws_keys.yaml",
