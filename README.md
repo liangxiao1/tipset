@@ -34,6 +34,7 @@ tipset is a colletion of mini tools about various tips under linux.
 There are 3 utils included currently.  
 **tipsearch**: a colletion of tips under linux, get to know the command usage with examples instead of looking for manual.  
 **json_parser**: convert json to yaml or plain text.  
+**amis_search**: search amis status in all regions and check whether they are supported.  
 **pkgone**: install required pkg from specify pkg name, pkg's file or pkg url(only yum/dnf supported now)
 
 ### **tipsearch** usage
