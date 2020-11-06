@@ -11,6 +11,7 @@ import copy
 import sys
 import logging
 import argparse
+import time
 try:
     import boto3
     from botocore.exceptions import ClientError
@@ -57,7 +58,7 @@ def check_boot(ec2_resource=None,instance_type=None,ami=None,subnet=None,region=
 
     return bootable
 
-def check_item(region, regionids, result_list, is_check, filter_json, filter,amiids):
+def check_item(region, regionids, result_list, is_check, filter_json, filter,amiids,is_delete, tag_skip):
     bootable = False
     if ACCESS_KEY is None:
         client = boto3.client('ec2', region_name=region)
@@ -119,10 +120,76 @@ def check_item(region, regionids, result_list, is_check, filter_json, filter,ami
             public_status = 'Public'
         else:
             public_status = 'Private'
-        if is_check:
-            result_list.append([img['Name'], img['ImageId'], "{}({})".format(region, len(images_list['Images'])), public_status, bootable])
+        if 'Tags' in img.keys():
+            imgname = img['Name'] + " tag:{}".format('-'.join(img['Tags'][0].values()))
         else:
-            result_list.append([img['Name'], img['ImageId'], "{}({})".format(region, len(images_list['Images'])), public_status])
+            imgname = img['Name']
+        if is_check:
+            result_list.append([imgname, img['ImageId'], "{}({})".format(region, len(images_list['Images'])), public_status, bootable])
+        else:
+            result_list.append([imgname, img['ImageId'], "{}({})".format(region, len(images_list['Images'])), public_status])
+        if is_delete:
+            has_tag = False
+            if tag_skip is not None:
+                for tag in tag_skip.split(','):
+                    if tag in imgname:
+                        log.info("skip {}".format(imgname))
+                        has_tag = True
+                        break
+            if not has_tag:
+                del_ami_snap(img['ImageId'], is_delete)
+
+def del_snapshot(snap_id):
+    '''
+    delete snapshot
+    '''
+
+    ec2 = boto3.resource('ec2')
+    try:
+        snapshot = ec2.Snapshot(snap_id)
+        snapshot.delete(DryRun=False)
+        log.info("delete snaphot: %s", snap_id)
+        return True
+    except Exception as err:
+        log.info("%s is not deleted as %s", snap_id, err)
+        return False
+
+def del_ami(ami_id):
+    '''
+    delete ami
+    '''
+
+    ec2 = boto3.resource('ec2')
+    try:
+        image = ec2.Image(ami_id)
+        image.deregister()
+        log.info("deregister ami: %s", ami_id)
+        return True
+    except Exception as err:
+        log.info("%s is not deleted as %s", ami_id, err)
+        return False
+
+def del_ami_snap(ami_id, is_delete):
+    ec2 = boto3.resource('ec2')
+    try:
+        ami=ami_id.strip(' ')
+        image = ec2.Image(ami)
+        log.info("%s found, state: %s name: %s" , ami, image.state, image.name)
+        log.debug(image.block_device_mappings)
+        snapid = image.block_device_mappings[0]['Ebs']['SnapshotId']
+        log.info("Get snapshot id: %s", snapid)
+        if snapid == None:
+            log.info("Cannot get snapshot id, do not clear ami")
+            return False
+        if is_delete:
+            del_ami(ami)
+            time.sleep(2)
+            del_snapshot(snapid)
+        return True
+    except Exception as err:
+        log.info("Hit error: %s", str(err))
+        return False
+
 def main():
     parser = argparse.ArgumentParser(
         'Search/Filter AMIs crossing regions.')
@@ -132,6 +199,8 @@ def main():
                         help='regions to check, split by comma, default is all', required=False)
     parser.add_argument('--region_skip', dest='region_skip', action='store',
                         help='regions not check, split by comma, default is none', required=False)
+    parser.add_argument('--tag_skip', dest='tag_skip', action='store',
+                        help='skip tags when delete amis', required=False)
     parser.add_argument('--filter_json', dest='filter_json', action='store',
                         help='{"Name":"name","Values":["*SAP*"]};{"Name": "tag:Name","Values": ["*baseami*"]};{"Name":"description","Values":["*Provided by Red Hat*"]} \
                             For all supported filed: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html#EC2.Client.describe_images', required=False)
@@ -147,6 +216,7 @@ def main():
                         help='Check whether AMI bootable', required=False)
     parser.add_argument('--amiids', dest='amiids', action='store',
                         help='specify amiids split by comman', required=False)
+    parser.add_argument('--delete', dest='delete',action='store_true',help='optional and caution, try to delete AMIs found',required=False)
     args = parser.parse_args()
     log = logging.getLogger(__name__)
     if args.is_debug:
@@ -203,8 +273,13 @@ def main():
         log.info("skip region: {}".format(args.region_skip.split(',')))
         for r in args.region_skip.split(','):
             regionids.remove(r)
+    if args.delete:
+        delete_confirm = input("Are you sure want to delete AMIs found?(yes/no)")
+        if 'yes' not in delete_confirm:
+            log.info("Please remove --delete if you do not want to delete")
+            sys.exit(0)
     with concurrent.futures.ThreadPoolExecutor(max_workers=150) as executor:
-            check_all_regions_tasks = {executor.submit(check_item, region, regionids, result_list, args.is_check, args.filter_json, args.filter, args.amiids): region for region in sorted(regionids)}
+            check_all_regions_tasks = {executor.submit(check_item, region, regionids, result_list, args.is_check, args.filter_json, args.filter, args.amiids, args.delete,args.tag_skip): region for region in sorted(regionids)}
             for r in concurrent.futures.as_completed(check_all_regions_tasks):
                 x = check_all_regions_tasks[r]
                 try:
