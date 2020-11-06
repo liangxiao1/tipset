@@ -57,7 +57,7 @@ def check_boot(ec2_resource=None,instance_type=None,ami=None,subnet=None,region=
 
     return bootable
 
-def check_item(region, regionids, result_list, is_check, filter_json, filter):
+def check_item(region, regionids, result_list, is_check, filter_json, filter,amiids):
     bootable = False
     if ACCESS_KEY is None:
         client = boto3.client('ec2', region_name=region)
@@ -68,24 +68,29 @@ def check_item(region, regionids, result_list, is_check, filter_json, filter):
             aws_secret_access_key=SECRET_KEY,
             region_name=region,
         )
+
+    filters = []
     if filter_json is not None:
-        filters = []
         for filter in filter_json.split(';'):
             filters.append(json.loads(filter))
-
+    if filter is not None:
+        filters.append(
+                    {
+                        'Name': 'name',
+                        'Values': [
+                            '*{}*'.format(filter),
+                            ]
+                    }
+                )
+    if amiids is not None:
+        amiids_list = amiids.split(',')
         images_list = client.describe_images(
                 Filters=filters,
+                ImageIds=amiids_list,
             )
-    else:    
+    else:
         images_list = client.describe_images(
-                Filters=[
-                {
-                    'Name': 'name',
-                    'Values': [
-                        '*{}*'.format(filter),
-                    ]
-                },
-            ],
+                Filters=filters,
             )
     subnet_list = client.describe_subnets()['Subnets']
     if ACCESS_KEY is None:
@@ -140,6 +145,8 @@ def main():
                         help='Run in debug mode', required=False)
     parser.add_argument('-c', dest='is_check', action='store_true', default=False,
                         help='Check whether AMI bootable', required=False)
+    parser.add_argument('--amiids', dest='amiids', action='store',
+                        help='specify amiids split by comman', required=False)
     args = parser.parse_args()
     log = logging.getLogger(__name__)
     if args.is_debug:
@@ -147,8 +154,8 @@ def main():
                             format='%(levelname)s:%(message)s')
     else:
         logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
-    if args.filter_json == None and args.filter == None:
-        log.info("Please specify filter_json or filter in cmd")
+    if args.filter_json == None and args.filter == None and args.amiids == None:
+        log.info("Please specify filter_json, filter or amiids in cmd")
         sys.exit(1)
     credential_file = args.tokenfile
     credential_file_format = "aws-us-gov: ['ec2_access_key','ec2_secret_key','subscription_username','subscription_password']"
@@ -178,18 +185,26 @@ def main():
             aws_secret_access_key=SECRET_KEY,
             region_name='us-west-2',
         )
-    region_list = client.describe_regions()['Regions']
-    regionids = []
-    for region in region_list:
-        regionids.append(region['RegionName'])
     
     if args.is_check:
         log.info("AMI Name | AMI ID | Region Name | Public | Bootable")
     else:
         log.info("AMI Name | AMI ID | Region Name | Public")
     result_list = []
+    if args.region is not None:
+        log.info("Only checking {}".format(args.region.split(',')))
+        regionids = args.region.split(',')
+    else:
+        region_list = client.describe_regions()['Regions']
+        regionids = []
+        for region in region_list:
+            regionids.append(region['RegionName'])
+    if args.region_skip is not None:
+        log.info("skip region: {}".format(args.region_skip.split(',')))
+        for r in args.region_skip.split(','):
+            regionids.remove(r)
     with concurrent.futures.ThreadPoolExecutor(max_workers=150) as executor:
-            check_all_regions_tasks = {executor.submit(check_item, region, regionids, result_list, args.is_check, args.filter_json, args.filter): region for region in sorted(regionids)}
+            check_all_regions_tasks = {executor.submit(check_item, region, regionids, result_list, args.is_check, args.filter_json, args.filter, args.amiids): region for region in sorted(regionids)}
             for r in concurrent.futures.as_completed(check_all_regions_tasks):
                 x = check_all_regions_tasks[r]
                 try:
