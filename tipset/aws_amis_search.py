@@ -3,6 +3,10 @@
 github : https://github.com/liangxiao1/tipset
 
 Search amis status in all regions and check whether they are supported.
+The delete option clean up amis and relative snapshots together.
+awscli deregister-image command only deregister image and do not delete
+snapshot, the snapshots created when built AMI is using disk resource.
+So clean them together to release resource.
 
 '''
 import json

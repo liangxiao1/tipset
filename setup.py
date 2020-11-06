@@ -31,7 +31,7 @@ setuptools.setup(
              'console_scripts': [
                  'tipsearch = tipset.tipsearch:main',
                  'json_parser = tipset.json_parser:main',
-                 'amis_search = tipset.amis_search:main',
+                 'aws_amis_search = tipset.aws_amis_search:main',
                  'pkgone = tipset.pkgone:main',
              ],
          },
