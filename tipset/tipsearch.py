@@ -83,6 +83,7 @@ def main():
             for field in fileds:
                 search_field(tips_data, field, keyword, tipids=args.tipids)
     print_result(result_dict, sum_only=args.sum_only,tipids=args.tipids)
+    log.info("Total found: {}".format(len(result_dict)))
 
 if __name__ == "__main__":
     main()

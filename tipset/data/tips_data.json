@@ -299,6 +299,7 @@
             {"step": "d$  - delete to end of line", "out": ""},
             {"step": ":1,.d  - delete to beginning of file", "out": ""},
             {"step": ":.,$d  - delete to end of file", "out": ""},
+            {"step": ":g/^/m0  - reverse the line", "out": ""},
             {"step": "Esc;Ctrl+V(moving up and down);Shift+i(input text);Esc (vim insert content to multiline)", "out": ""}
         ],
         "tags": "vi, vim, shortcuts",
@@ -781,6 +782,87 @@
             {"step": "rpm -q --changelog kernel (query the changelog of a pkg)", "out": ""}
         ],
         "tags": "rpm, query, command",
+        "comments": "",
+        "link": ""
+    },
+    "tip_59": {
+        "subject": "JMS Message selector expressions",
+        "demo_steps": [
+            {"step": "Comparison operators: =, >, >=, <, <=, <> (not equal). ", "out": ""},
+            {"step": "Logical operators in precedence order: NOT, AND, OR.", "out":""},
+            {"step": "Age NOT BETWEEN 15 and 19 is equivalent to age < 15 OR age > 19.", "out":""},
+            {"step": "Country NOT IN ('UK', 'US', 'France') ", "out": ""},
+            {"step": "phone NOT LIKE '12%3'", "out": ""},
+            {"step": "prop_name IS NOT NULL.", "out": ""},
+            {"step": "compose_id NOT LIKE  \\'RHEL-8.3.1-%.dt.%\\'", "out": ""}
+        ],
+        "tags": "jms, message, ci",
+        "comments": "",
+        "link": "https://www.ibm.com/support/knowledgecenter/SSFKSJ_7.5.0/com.ibm.mq.dev.doc/q031980_.htm"
+    },
+    "tip_60": {
+        "subject": "Bash tips: Colors and formatting (ANSI/VT100 Control sequences)",
+        "demo_steps": [
+            {"step": "echo -e \"\\033[31m Hello World\\e[0m\" (red)", "out": ""},
+            {"step": "30-37 sets foreground color, 40-47 sets background color", "out":""},
+            {"step": "echo -e \"Default \\e[32mGreen\\e[0m\"", "out":""},
+            {"step": "echo -e \"Default \\e[33mYellow\\e[0m\"", "out": ""},
+            {"step": "echo -e \"Default \\e[41mRed\\e[0m\"", "out": ""},
+            {"step": "echo -e \"Default \\e[42mGreen\\e[0m\"", "out": ""},
+            {"step": "echo -e \"Default \\e[43mYellow\\e[0m\"", "out": ""}
+        ],
+        "tags": "color, bash, format",
+        "comments": "",
+        "link": "https://misc.flogisoft.com/bash/tip_colors_and_formatting"
+    },
+    "tip_61": {
+        "subject": "sed examples",
+        "demo_steps": [
+            {"step": "sed -i \"97d;98d\" /tmp/1 (delete line 97, 98)" , "out": ""},
+            {"step": "sed -n '22,30p' /tmp/2 (display 22~30 line)", "out": ""},
+            {"step": "sed -i \"/foos/d\" /tmp/1 (find and delete the match line)", "out":""},
+            {"step": "sed -i '1s/^/add to new top line\\n/' /tmp/1 (add new line at top)", "out":""},
+            {"step": "sed -i 's/\\(^.*100.*$\\)/\/\/\\1/' /tmp/1 (insert \\\\ at the head of matched line)", "out": ""},
+            {"step": "sed -i 's/^foo/#comment out as bug 1464851\\n&/g' /tmp/1 (add one line before matched)", "out": ""},
+            {"step": "sed -e 's/^foo.*/report/g' /tmp/1 (replace entire line with other)", "out": ""},
+            {"step": "sed '1!G;h;$!d' /tmp/2 (revers file line, move top to down)", "out": ""}
+        ],
+        "tags": "bash, sed",
+        "comments": "",
+        "link": ""
+    },
+    "tip_62": {
+        "subject": "awk examples",
+        "demo_steps": [
+            {"step": "awk 'NR==6' /tmp/1 (display line 6)" , "out": ""},
+            {"step": "awk 'FNR>=20 && FNR<=30' /tmp/1 (display 22~30 line)", "out": ""},
+            {"step": "awk 'BEGIN{FS=\":\"; OFS=\"~\";}{print $3,$4; }' /etc/passwd", "out":""},
+            {"step": "echo abcdefg|awk 'BEGIN {FS=\"\"}{for(a=NF;a>0;a--) printf(\"%s\",a==1?$a\"\\n\":$a)}' (revert a string)", "out":""},
+            {"step": "echo abcdefg|awk 'BEGIN {FS=\"\"}{for(a=NF;a>0;a--) printf(\"%c\", $a)} END{print\"\\n\"}' (revert a string)", "out": ""},
+            {"step": "echo abcdefg|awk 'BEGIN {FS=\"\"}{for(a=NF;a>0;a--) {if(a>3) printf(\"%c\", $a)}} END{print\"\\n\"}' (revert a string)", "out": ""},
+            {"step": "ss=abcdefg; echo ${ss: -5} (revert one string)", "out": ""},
+            {"step": "echo abcdefg|rev (revert one string)", "out": ""},
+            {"step": "echo \"100 1 100 1 100\"| awk 'BEGIN{FS=\" \"}{for(i=1;i<=NF;i++) arr[$i]++}END{for(i in arr) print arr[i],i}' (count repeat words)", "out": "2 1\n3 100"},
+            {"step": "echo \"sdsf sdsdfsad.amazonaws.com\"||awk -F\" \" '/amazonaws.com/{for (i=1;i<=NF;i++) if($i~/amazonaws.com/) print $i}'", "out": "sdsdfsad.amazonaws.com"},
+            {"step": "ss=abcdefg; echo ${ss//abc/xyz} (replace words in string)", "out": "xyzdefg"},
+            {"step": "awk 'BEGIN{FS=\"[^0-9]\";} /[0-9]$/ {print $NF}' /tmp/2 (search num)", "out": ""},
+            {"step": "awk '{print $NF}' /tmp/1 (print last column)", "out": ""},
+            {"step": "echo \"a b c\"|awk '{print NR,\"~\",NF}' (print line num and clumn count)", "out": "1 ~ 3"},
+            {"step": "IFS=\":\";export IFS;while read w y; do echo \"test $w\"; done </etc/passwd", "out": ""},
+            {"step": "awk '{if ($0~/^$/) print NR}' /tmp/1 (print line num of empty line)", "out": ""},
+            {"step": "echo $nvr | awk -F'.' '{print NF-1}'", "out": ""},
+            {"step": "echo $nvr|grep -o -e \"-[0-9]\\{1,3\\}.[0-9]\"", "out": ""}
+        ],
+        "tags": "bash, awk",
+        "comments": "",
+        "link": ""
+    },
+    "tip_63": {
+        "subject": "passwd change in one line",
+        "demo_steps": [
+            {"step": "echo $newpass|passwd $user --stdin" , "out": ""}
+        ],
+        "tags": "bash, passwd, password",
         "comments": "",
         "link": ""
     }

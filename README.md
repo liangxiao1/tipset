@@ -39,22 +39,27 @@ There are 4 utils included currently(under /usr/local/bin by default).
 
 ### **tipsearch** usage
 
-Below is a simple example to search manually keywords when boot menu was broken.
+Below is a simple example to search sed examples from subject.
 
 ```bash
-$ tipsearch -k 'manually'
-INFO:Run in mode: keywords:manually fields: None tipids: None sum_only: False
+$ tipsearch -k sed -f subject
+INFO:Run in mode: keywords:sed fields: subject tipids: None sum_only: False
 INFO:Loading baseline data file from /home/xiliang/p3_venv/lib/python3.6/site-packages/tipset/data/tips_data.json
 INFO:---------------------------------------------------------------------------
-INFO:tipid:tip_6 subject:Boot from grub manually
-INFO:step:insmod lvm
-INFO:step:linux16 (hd0,msdos1)/vmlinuz-5.0.3-300.fc30.x86_64 root=/dev/mapper/fedora_wasa-root ro rd.lvm.lv=fedora_wasa/root
-INFO:step:initrd16 (hd0,msdos1)/initramfs-5.0.3-300.fc30.x86_64.img
-INFO:step:set root=(lvm,fedora_wasa-root)/
-INFO:step:boot
-INFO:tags:grub, boot
-INFO:comments:useful when boot menu was broken
+INFO:tipid:tip_61 subject:sed examples
+INFO:step:sed -i "97d;98d" /tmp/1 (delete line 97, 98)
+INFO:step:sed -n '22,30p' /tmp/2 (display 22~30 line)
+INFO:step:sed -i "/foos/d" /tmp/1 (find and delete the match line)
+INFO:step:sed -i '1s/^/add to new top line\n/' /tmp/1 (add new line at top)
+INFO:step:sed -i 's/\(^.*100.*$\)///\1/' /tmp/1 (insert \\ at the head of matched line)
+INFO:step:sed -i 's/^foo/#comment out as bug 1464851\n&/g' /tmp/1 (add one line before matched)
+INFO:step:sed -e 's/^foo.*/report/g' /tmp/1 (replace entire line with other)
+INFO:step:sed '1!G;h;$!d' /tmp/2 (revers file line, move top to down)
+INFO:tags:bash, sed
+INFO:comments:
 INFO:link:
+INFO:Total found: 1
+
 ```
 
 ### **json_parser usage**
