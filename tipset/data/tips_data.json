@@ -152,9 +152,11 @@
     "tip_12": {
         "subject": "Customize qcow2 image",
         "demo_steps": [
-            {"step": "yum install -y virt-install libvirt-daemon-config-network libvirtd, libguestfs-tools", "out": ""},
+            {"step": "yum install -y virt-install libvirt-daemon-config-network libvirt libguestfs-tools", "out": ""},
             {"step": "virsh net-start default", "out": ""},
             {"step": "virt-install --name vmname --memory 2048 --vcpus 2 --disk size=8,bus=virtio --location rhel-7.0-x86_64-dvd.iso --os-variant=rhel7.0", "out": ""},
+            {"step": "sed -i 's/^#spice_listen = \"0.0.0.0\"/spice_listen = \"0.0.0.0\"/g' /etc/libvirt/qemu.conf", "out": ""},
+            {"step": "sed -i 's/^#vnc_listen = \"0.0.0.0\"/vnc_listen = \"0.0.0.0\"/g' /etc/libvirt/qemu.conf (default vnc port 5900)", "out": ""},
             {"step": "export LIBGUESTFS_BACKEND=direct", "out": ""},
             {"step": "virt-customize -a rhel-guest-image-8.2-290.x86_64.raw --run-command \"echo 'add_drivers+=\\\" xen-netfront xen-blkfront \\\"' > /etc/dracut.conf.d/xen.conf\"", "out": ""},
             {"step": "virt-customize -a rhel-guest-image-8.2-290.x86_64.raw --run-command \"dracut -f /boot/initramfs-$(rpm -q kernel --qf '%{V}-%{R}.%{arch}\n').img $(rpm -q kernel --qf '%{V}-%{R}.%{arch}\n')\"", "out": ""},
@@ -535,11 +537,12 @@
             {"step": "git push origin v0.0.15 (push only one tag to remote)", "out": ""},
             {"step": "git tag -l (list all tags)", "out": ""},
             {"step": "git tag v0.0.15 (add a new tag)", "out": ""},
-            {"step": "git checkout tags/v0.0.15 -b $newbranch", "out": ""}
+            {"step": "git checkout tags/v0.0.15 -b $newbranch", "out": ""},
+            {"step": "git config --global credential.helper store (save https pass in ~/.git-credentials)", "out": ""}
         ],
         "tags": "git, github, tag",
         "comments": "",
-        "link": ""
+        "link": "https://www.tecmint.com/fix-git-user-credentials-for-https/"
     },
     "tip_42": {
         "subject": "kerberos",
@@ -865,5 +868,56 @@
         "tags": "bash, passwd, password",
         "comments": "",
         "link": ""
+    },
+    "tip_64": {
+        "subject": "Linux installation boot options",
+        "demo_steps": [
+            {"step": "inst.ks=http://10.32.5.1/mnt/archive/RHEL-7/7.x/Server/x86_64/kickstarts/ks.cfg" , "out": ""},
+            {"step": "inst.repo=http://host/path" , "out": ""},
+            {"step": "inst.repo=cdrom" , "out": ""},
+            {"step": "inst.vnc" , "out": ""},
+            {"step": "inst.vncpassword=xxxxxx" , "out": ""}
+        ],
+        "tags": "boot, install, ks",
+        "comments": "",
+        "link": "https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/installation_guide/chap-anaconda-boot-options"
+    },
+    "tip_65": {
+        "subject": "Linux cockpit web console",
+        "demo_steps": [
+            {"step": "yum install -y cockpit cockpit-machines" , "out": ""},
+            {"step": "systemctl disable --now firewalld" , "out": ""},
+            {"step": "systemctl enable --now cockpit" , "out": ""},
+            {"step": "vist https://hostname:9090/" , "out": ""}
+        ],
+        "tags": "cockpit, management",
+        "comments": "",
+        "link": ""
+    },
+    "tip_66": {
+        "subject": "Python programming",
+        "demo_steps": [
+            {"step": "b=lambda x,y: x*y; b(4,5); equal to def <lambda>(parameters):\n    return expression" , "out": "20"},
+            {"step": "[x*2 for x in ['b','c']]" , "out": "['bb', 'cc']"},
+            {"step": "x=[('a',2),('b',1)];sorted(x,key=lambda x: x[0]);sorted(x,key=lambda x: x[1])" , "out": ""},
+            {"step": "d=[{'a':5,'b':8},{'a':6,'b':7}];sorted(d,key=lambda x: (x['a']), reverse=True);sorted(d,key=lambda x: (x['b']))" , "out": ""}
+        ],
+        "tags": "python, launguage, program",
+        "comments": "",
+        "link": "https://docs.python.org/3/"
+    },
+    "tip_67": {
+        "subject": "xen cfg example, xen configuration file",
+        "demo_steps": [
+            {"step": "boot=\"cdn\" (c: disk, d: cdrom, n: network)" , "out": ""},
+            {"step": "disk = [ 'DISKSPEC', 'DISKSPEC', ... ]" , "out": ""},
+            {"step": "disk = [ '/dev/vg/guest-volume,raw,hda,rw', '/root/image.iso,,hdc,cdrom' ]" , "out": ""},
+            {"step": "vif = [ \"mac=00:16:3d:fb:78:34,bridge=xenbr0,script=vif-bridge\" ]" , "out": ""},
+            {"step": "name = 'rhelx'\nmemory = 2048\nvcpus = 4\non_poweroff = 'destroy'\non_reboot = 'restart'\non_crash = 'restart'\nvnc = 1\nvnclisten = '0.0.0.0'\nvif = [ 'mac=00:16:3d:fb:78:24,bridge=xenbr0,script=vif-bridge' ]\nserial = 'pty'\nbuilder = 'hvm'\nboot = 'dc'\ndisk = [ 'format=raw,vdev=hda,access=rw,backendtype=qdisk,target=/home/rhel/RHEL-xxx.raw','/home/rhel/RHEL-xxx.iso,,hdc,cdrom' ]" , "out": ""},
+            {"step": "name = '7.9pv'\nkernel = '/home/rhel/boot/vmlinuz-3.10.0-1160.5.1.el7.x86_64'\nramdisk = '/home/rhel/boot/initramfs-3.10.0-1160.5.1.el7.x86_64.img'\nroot = '/dev/mapper/rhel_bootp--73--226--103-root'" , "out": ""}
+        ],
+        "tags": "xen, xl.cfg",
+        "comments": "",
+        "link": "https://xenbits.xen.org/docs/unstable/man/xl.cfg.5.html"
     }
 }

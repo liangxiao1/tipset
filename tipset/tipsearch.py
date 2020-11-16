@@ -70,7 +70,7 @@ def main():
         tips_data = json.load(fh)
     if args.keywords is None:
         log.info("No keyword specified, show all items!")
-        print_result(tips_data, tipids=args.tipids)
+        print_result(tips_data, sum_only=args.sum_only, tipids=args.tipids)
         sys.exit(0)
     for keyword in args.keywords.split(','):
         if args.fields is not None:
