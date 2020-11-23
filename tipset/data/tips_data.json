@@ -52,6 +52,7 @@
             {"step": "grubby --set-default-index=1", "out": ""},
             {"step": "grubby --default-index", "out": ""},
             {"step": "grubby --default-kernel", "out": ""},
+            {"step": "grubby --update-kernel=ALL --args='console=ttyS0'", "out": ""},
             {"step": "grubby --update-kernel=ALL --args='initcall_blacklist=arm_smmu_driver_init'", "out": ""},
             {"step": "grubby --update-kernel=ALL --remove-args='initcall_blacklist=arm_smmu_driver_init'", "out": ""},
             {"step": "grubby --update-kernel=ALL --args='irqchip.gicv3_pseudo_nmi=1'", "out": ""},
@@ -309,13 +310,14 @@
         "link": ""
     },
     "tip_23": {
-        "subject": "ssh login without password",
+        "subject": "ssh login setup",
         "demo_steps": [
             {"step": "ssh-keygen", "out": ""},
-            {"step": "ssh-copy-id remoteuser@remoteserver", "out": ""},
-            {"step": "ssh-keyscan remote_servers >> ~/.ssh/known_hosts (option)", "out": ""}
+            {"step": "ssh-copy-id remoteuser@remoteserver (login remote without password)", "out": ""},
+            {"step": "ssh-keyscan remote_servers >> ~/.ssh/known_hosts (option)", "out": ""},
+            {"step": "sed -i 's/\\(^PermitRootLogin.*$\\)/#enableroot&/' /etc/ssh/sshd_config;sed -i 's/#PermitRootLogin/PermitRootLogin yes\n&/g' /etc/ssh/sshd_config (enable root login)", "out": ""}
         ],
-        "tags": "ssh",
+        "tags": "ssh, login",
         "comments": "",
         "link": ""
     },
@@ -825,7 +827,7 @@
             {"step": "sed -n '22,30p' /tmp/2 (display 22~30 line)", "out": ""},
             {"step": "sed -i \"/foos/d\" /tmp/1 (find and delete the match line)", "out":""},
             {"step": "sed -i '1s/^/add to new top line\\n/' /tmp/1 (add new line at top)", "out":""},
-            {"step": "sed -i 's/\\(^.*100.*$\\)/\/\/\\1/' /tmp/1 (insert \\\\ at the head of matched line)", "out": ""},
+            {"step": "sed -i 's/\\(^100.*$\\)/#enableroot&/' /tmp/1 (insert # at the head of matched line)", "out": ""},
             {"step": "sed -i 's/^foo/#comment out as bug 1464851\\n&/g' /tmp/1 (add one line before matched)", "out": ""},
             {"step": "sed -e 's/^foo.*/report/g' /tmp/1 (replace entire line with other)", "out": ""},
             {"step": "sed '1!G;h;$!d' /tmp/2 (revers file line, move top to down)", "out": ""}
@@ -919,5 +921,60 @@
         "tags": "xen, xl.cfg",
         "comments": "",
         "link": "https://xenbits.xen.org/docs/unstable/man/xl.cfg.5.html"
+    },
+    "tip_68": {
+        "subject": "Find which serial console connected in case no console output using default ttyS0",
+        "demo_steps": [
+            {"step": "dmesg|grep -i ttyS" , "out": ""},
+            {"step": "cat /proc/tty/driver/serial" , "out": ""},
+            {"step": "ls /dev/ttyS*" , "out": ""},
+            {"step": "echo 'testconsole' > /dev/ttySn" , "out": ""}
+        ],
+        "tags": "ttyS0, serial, console",
+        "comments": "",
+        "link": ""
+    },
+    "tip_69": {
+        "subject": "Amazon EC2 Nitro Enclaves",
+        "demo_steps": [
+            {"step": "aws ec2 run-instances --image-id=ami-xxxxxx --key-name $keyname --instance-type c5.2xlarge  --block-device-mapping \"[ { \"DeviceName\": \"/dev/xvda\", \"Ebs\": { \"VolumeSize\": 20 } } ]\" --enclave-options 'Enabled=true'" , "out": ""},
+            {"step": "lsmod|grep nitro_enclaves" , "out": ""},
+            {"step": "enable 'codeready-builder-for-rhel-8-rhui-rpms' repo in /etc/yum.repos.d/redhat-rhui.repo" , "out": ""},
+            {"step": "dnf -y install gcc make git podman-docker" , "out": ""},
+            {"step": "git clone https://github.com/vittyvk/aws-nitro-enclaves-cli.git && cd aws-nitro-enclaves-cli" , "out": ""},
+            {"step": "setenforce 0" , "out": ""},
+            {"step": "make && make vsock-proxy" , "out": ""},
+            {"step": "NITRO_CLI_INSTALL_DIR=/ make install-tools" , "out": ""},
+            {"step": "mkdir /run/nitro_enclaves/" , "out": ""},
+            {"step": "systemctl enable nitro-enclaves-allocator.service && systemctl start nitro-enclaves-allocator.service" , "out": ""},
+            {"step": "curl -O http://xxxxxx/hello_v2.eif" , "out": ""},
+            {"step": "nitro-cli run-enclave --cpu-count 2 --memory 256 --eif-path hello_v2.eif --debug-mode" , "out": ""},
+            {"step": "nitro-cli console --enclave-id i-xxx-encxxx" , "out": ""}
+        ],
+        "tags": "ec2, enclave, console",
+        "comments": "",
+        "link": "https://bugzilla.redhat.com/show_bug.cgi?id=1893826"
+    },
+    "tip_70": {
+        "subject": "most used repos",
+        "demo_steps": [
+            {"step": "http://rpmfind.net/linux/epel/" , "out": ""},
+            {"step": "https://mirrors.fedoraproject.org/mirrorlist?repo=fedora-28&arch=aarch64 (in case you wants pkgs for rhel8, fc28)" , "out": ""}
+        ],
+        "tags": "repo, yum",
+        "comments": "",
+        "link": ""
+    },
+    "tip_71": {
+        "subject": "koji/brew buid examples",
+        "demo_steps": [
+            {"step": "koji build --scratch rhel-8.3.0-test-pesign  /xx/kernel-xxx.src.rpm" , "out": ""},
+            {"step": "koji taskinfo 33132785" , "out": ""},
+            {"step": "koji resubmit 33132785" , "out": ""},
+            {"step": "koji brew hello" , "out": ""}
+        ],
+        "tags": "koji, brew, build",
+        "comments": "",
+        "link": "https://fedoraproject.org/wiki/Using_the_Koji_build_system#Using_Koji_in_Fedora"
     }
 }

@@ -34,8 +34,8 @@ tipset is a colletion of mini tools about various tips under linux.
 There are 4 utils included currently(under /usr/local/bin by default).  
 **tipsearch**: a colletion of tips under linux, get to know the command usage with examples instead of looking for manual.  
 **json_parser**: convert json to yaml or plain text.  
-**aws_amis_search**: search aws amis status in all regions and check whether they are supported.  
-**pkgone**: install required pkg from specify pkg name, pkg's file or pkg url(only yum/dnf supported now)
+**aws_amis_search**: search and delete aws amis status in all regions and check whether they are supported.  
+**aws_instance_search**: search and delete aws running instances in all supported regions by keyname/tag
 
 ### **tipsearch** usage
 
