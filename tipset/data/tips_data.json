@@ -155,7 +155,9 @@
         "demo_steps": [
             {"step": "yum install -y virt-install libvirt-daemon-config-network libvirt libguestfs-tools", "out": ""},
             {"step": "virsh net-start default", "out": ""},
+            {"step": "systemctl enable --now libvirtd", "out": ""},
             {"step": "virt-install --name vmname --memory 2048 --vcpus 2 --disk size=8,bus=virtio --location rhel-7.0-x86_64-dvd.iso --os-variant=rhel7.0", "out": ""},
+            {"step": "virt-install --name guest1-rhel7 --memory 2048 --vcpus 2 --disk /path/to/imported/disk.qcow --import --os-variant rhel7", "out": ""},
             {"step": "sed -i 's/^#spice_listen = \"0.0.0.0\"/spice_listen = \"0.0.0.0\"/g' /etc/libvirt/qemu.conf", "out": ""},
             {"step": "sed -i 's/^#vnc_listen = \"0.0.0.0\"/vnc_listen = \"0.0.0.0\"/g' /etc/libvirt/qemu.conf (default vnc port 5900)", "out": ""},
             {"step": "export LIBGUESTFS_BACKEND=direct", "out": ""},
@@ -303,7 +305,8 @@
             {"step": ":1,.d  - delete to beginning of file", "out": ""},
             {"step": ":.,$d  - delete to end of file", "out": ""},
             {"step": ":g/^/m0  - reverse the line", "out": ""},
-            {"step": "Esc;Ctrl+V(moving up and down);Shift+i(input text);Esc (vim insert content to multiline)", "out": ""}
+            {"step": "Esc;Ctrl+V(moving up and down);Shift+i(input text);Esc (vim insert content to multiline)", "out": ""},
+            {"step": "P to paste before the cursor, or p to paste after.", "out": ""}
         ],
         "tags": "vi, vim, shortcuts",
         "comments": "",
@@ -390,7 +393,10 @@
             {"step": "echo 'file tools/perf/tests/code-reading.c func  do_test_code_reading +p' > /sys/kernel/debug/dynamic_debug/control", "out": ""},
             {"step": "echo 'file tools/perf/tests/* +p' > /sys/kernel/debug/dynamic_debug/control", "out": ""},
             {"step": "echo 'file drivers/net/ethernet/amazon/ena* +p' > /sys/kernel/debug/dynamic_debug/control", "out": ""},
-            {"step": "echo 'file drivers/net/ethernet/amazon/ena/ena_ethtool.c +p' > /sys/kernel/debug/dynamic_debug/control", "out": ""}
+            {"step": "echo 'file drivers/net/ethernet/amazon/ena/ena_ethtool.c +p' > /sys/kernel/debug/dynamic_debug/control", "out": ""},
+            {"step": "echo -n 'module nvme +p' > /sys/kernel/debug/dynamic_debug/control' > /sys/kernel/debug/dynamic_debug/control", "out": ""},
+            {"step": "echo \"options nvme dyndbg\"; dracut -f -v(enable module dynamic debug)", "out": "options nvme dyndbg"},
+            {"step": "echo \"options nvme_core multipath=Y\" > /etc/modprobe.d/50-nvme_core.conf", "out": ""}
         ],
         "tags": "kernel, debug",
         "comments": "",
@@ -649,7 +655,10 @@
     "tip_49": {
         "subject": "ip command examples",
         "demo_steps": [
-            {"step": "ip link set dev eth0 mtu 1500", "out": ""}
+            {"step": "ip link set dev eth0 mtu 1500", "out": ""},
+            {"step": "ip route add 172.31.16.0/20 dev eth0 advmss 128", "out": ""},
+            {"step": "ip route change 172.31.16.0/20 dev eth0 proto kernel scope link src 172.31.21.106 metric 100 advmss 128", "out": ""},
+            {"step": "route -nee (check mss set)", "out": ""}
         ],
         "tags": "ip, network",
         "comments": "",
@@ -760,12 +769,13 @@
             {"step": "aws ec2 run-instances --region=us-west-2 --image-id=ami-9fa343e7 --key-name xiliangc5 --instance-type c5.2xlarge  --subnet-id subnet-b4591eef --associate-public-ip-address --placement {\"AvailabilityZone\":\"us-west-2c\"}", "out": ""},
             {"step": "aws ec2 describe-instances --instance-ids i-xxxxxxxx", "out": ""},
             {"step": "aws ec2 create-tags --resources i-xxxxxxx --tags Key=Name,Value=xxxxxxx", "out": ""},
+            {"step": "aws ec2 describe-instance-types --instance-types m5zn.6xlarge --output json|jq '.[\"InstanceTypes\"][][\"VCpuInfo\"]'", "out": ""},
             {"step": "aws ec2 get-console-output --output text --latest --instance-id i-xxxxxx", "out": ""},
             {"step": "aws ec2 stop-instances --instance-ids i-xxxxxxx --force", "out": ""},
             {"step": "aws ec2 describe-instances --instance-ids i-0fda302413ef93ad1", "out": ""},
             {"step": "aws ec2 describe-instances --filters \"Name=instance-type,Values=c5.4xlarge\"", "out": ""},
             {"step": "aws ec2 create-volume --size 80 --region ap-northeast-1 --availability-zone ap-northeast-1a --volume-type gp2", "out": ""},
-            {"step": "aws ec2 attach-volume --volume-id vol-xxxxxxxx --instance-id i-xxxxxxx--device /dev/xvdb", "out": ""},
+            {"step": "aws ec2 attach-volume --volume-id vol-xxxxxxxx --instance-id i-xxxxxxx --device /dev/xvdb", "out": ""},
             {"step": "https://signin.aws.amazon.com/switchrole?roleName=xxxx&account=xxxx (switch role from web)", "out": ""},
             {"step": "aws ec2 describe-images --image-id ami-xxxxxx --query 'Images[].EnaSupport'", "out": ""},
             {"step": "aws ec2 describe-images --query 'Images[*].{ID:ImageId,Name:Name,Public:Public}' --filters 'Name=name,Values=*JBEAP-7.2.0*'  --region us-west-1", "out": ""},
@@ -901,6 +911,7 @@
         "demo_steps": [
             {"step": "b=lambda x,y: x*y; b(4,5); equal to def <lambda>(parameters):\n    return expression" , "out": "20"},
             {"step": "[x*2 for x in ['b','c']]" , "out": "['bb', 'cc']"},
+            {"step": "[i.upper() for i in ['a', 'b', 'C', 'd'] if i.islower()]" , "out": "['A', 'B', 'D']"},
             {"step": "x=[('a',2),('b',1)];sorted(x,key=lambda x: x[0]);sorted(x,key=lambda x: x[1])" , "out": ""},
             {"step": "d=[{'a':5,'b':8},{'a':6,'b':7}];sorted(d,key=lambda x: (x['a']), reverse=True);sorted(d,key=lambda x: (x['b']))" , "out": ""}
         ],
@@ -969,12 +980,33 @@
         "subject": "koji/brew buid examples",
         "demo_steps": [
             {"step": "koji build --scratch rhel-8.3.0-test-pesign  /xx/kernel-xxx.src.rpm" , "out": ""},
+            {"step": "koji build --scratch rhel-8.4.0-test-pesign  'git url'" , "out": ""},
             {"step": "koji taskinfo 33132785" , "out": ""},
             {"step": "koji resubmit 33132785" , "out": ""},
-            {"step": "koji brew hello" , "out": ""}
+            {"step": "koji brew hello" , "out": ""},
+            {"step": "git clone  git://xxxx/rhel-8.git" , "out": ""},
+            {"step": "git checkout -b bzxxxx remotes/origin/branchname" , "out": ""},
+            {"step": "yum install -y gcc bison flex tar bzip2 patchutils rpm-build" , "out": ""},
+            {"step": "view redhat/Makefile" , "out": ""},
+            {"step": "export BUILDID=bz1872943" , "out": ""},
+            {"step": "make rh-srpm" , "out": ""},
+            {"step": "koji build --scratch rhel-8.3.0-test-pesign kernel-xxxx.bz1872943.src.rpm" , "out": ""},
+            {"step": "make rh-brew (build from git directly, maybe slow to upload source)" , "out": ""}
         ],
         "tags": "koji, brew, build",
         "comments": "",
         "link": "https://fedoraproject.org/wiki/Using_the_Koji_build_system#Using_Koji_in_Fedora"
+    },
+    "tip_72": {
+        "subject": "How to update a forked repo with git rebase",
+        "demo_steps": [
+            {"step": "git remote add upstream https://github.com/original-repo/goes-here.git", "out": ""},
+            {"step": "git fetch upstream", "out": ""},
+            {"step": "git rebase upstream/master|main ", "out": ""},
+            {"step": "git push origin master|main --force", "out": ""}
+        ],
+        "tags": "git, github, rebase",
+        "comments": "",
+        "link": "https://medium.com/@topspinj/how-to-git-rebase-into-a-forked-repo-c9f05e821c8a"
     }
 }
