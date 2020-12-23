@@ -158,26 +158,30 @@
             {"step": "systemctl enable --now libvirtd", "out": ""},
             {"step": "virt-install --name vmname --memory 2048 --vcpus 2 --disk size=8,bus=virtio --location rhel-7.0-x86_64-dvd.iso --os-variant=rhel7.0", "out": ""},
             {"step": "virt-install --name guest1-rhel7 --memory 2048 --vcpus 2 --disk /path/to/imported/disk.qcow --import --os-variant rhel7", "out": ""},
+            {"step": "virt-install --name rhel8 --memory 2048 --vcpus 2 --disk size=8,bus=virtio --location RHEL-x.0.0-xxxx1.iso  --os-variant=rhel8.3  --extra-args \"console=ttyS0 inst.ks=http://xxx/rhel-8.4-ec2.ks\"", "out": ""},
             {"step": "sed -i 's/^#spice_listen = \"0.0.0.0\"/spice_listen = \"0.0.0.0\"/g' /etc/libvirt/qemu.conf", "out": ""},
             {"step": "sed -i 's/^#vnc_listen = \"0.0.0.0\"/vnc_listen = \"0.0.0.0\"/g' /etc/libvirt/qemu.conf (default vnc port 5900)", "out": ""},
             {"step": "export LIBGUESTFS_BACKEND=direct", "out": ""},
             {"step": "virt-customize -a rhel-guest-image-8.2-290.x86_64.raw --run-command \"echo 'add_drivers+=\\\" xen-netfront xen-blkfront \\\"' > /etc/dracut.conf.d/xen.conf\"", "out": ""},
-            {"step": "virt-customize -a rhel-guest-image-8.2-290.x86_64.raw --run-command \"dracut -f /boot/initramfs-$(rpm -q kernel --qf '%{V}-%{R}.%{arch}\n').img $(rpm -q kernel --qf '%{V}-%{R}.%{arch}\n')\"", "out": ""},
+            {"step": "virt-customize -a rhel9-1.qcow2 --run-command \"dracut -f /boot/initramfs-5.9.0-40.el9.x86_64.img  5.9.0-40.el9.x86_64 --add-drivers 'nvme'\"", "out": ""},
+            {"step": "virt-customize -a rhel-guest-image-8.2-290.x86_64.raw --run-command \"dracut -f /boot/initramfs-$(rpm -q kernel --qf '%{V}-%{R}.%{arch}\n').img $(rpm -q kernel --qf '%{V}-%{R}.%{arch}')\"", "out": ""},
             {"step": "virt-edit -a rhel-guest-image-8.2-290.x86_64.raw /etc/dracut.conf.d/xen.conf", "out": ""},
             {"step": "virt-customize -a rhel-guest-image-7.7-261.x86_64.qcow2 --root-password password:redhat --uninstall cloud-init", "out": ""},
             {"step": "qemu-img info rhel8.AWS", "out": ""},
-            {"step": "qemu-img resize rhel8.AWS 9G", "out": ""}
+            {"step": "qemu-img resize rhel8.AWS 9G", "out": ""},
+            {"step": "virsh undefine --nvram rhelx (when cannot undefine domain with nvram)", "out": ""}
         ],
         "tags": "virt-install, libguestfs, libvirt, iso",
         "comments": "",
-        "link": ""
+        "link": "https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/virtualization_deployment_and_administration_guide/sect-guest_virtual_machine_installation_overview-creating_guests_with_virt_install"
     },
     "tip_13": {
         "subject": "register rhel AMI from local image to aws ec2",
         "demo_steps": [
             {"step": "qemu-img convert -f qcow2 -O raw rhel-server-7.7-1-x86_64-kvm.qcow2 rhel-server-7.7-1-x86_64-kvm.raw", "out": ""},
             {"step": "aws s3 cp rhel-server-7.7.1-x86_64-kvm.raw s3://s3-bucket-name", "out": ""},
-            {"step": "aws ec2 import-image --platform Linux --license-type BYOL --no-encrypted --description 'xiliang_7.9gadoc' --architecture x86_64 --disk-containers Format=Raw,UserBucket=\"{S3Bucket=virtqes1,S3Key=rhel-server-ec2-7.9-30.x86_64.raw}\" --region us-east-1", "out": ""}
+            {"step": "aws ec2 import-image --platform Linux --license-type BYOL --no-encrypted --description 'xiliang_7.9gadoc' --architecture x86_64 --disk-containers Format=Raw,UserBucket=\"{S3Bucket=virtqes1,S3Key=rhel-server-ec2-7.9-30.x86_64.raw}\" --region us-east-1", "out": ""},
+            {"step": "aws ec2 describe-import-image-tasks --import-task-ids import-ami-xxxxxxxxx", "out": ""}
         ],
         "tags": "AMI, ec2, rhel",
         "comments": "pls check doc for rhel8",
@@ -493,7 +497,8 @@
     "tip_37": {
         "subject": "yum repo file template",
         "demo_steps": [
-            {"step": "[rhel7]\nname=rhel7.5\nbaseurl = xxxx(url or file:///xxxx/BaseOS)\nenabled=1\ngpgcheck=0\nproxy=http://127.0.0.1:8080 (option)\n", "out": ""}
+            {"step": "[rhel7]\nname=rhel7.5\nbaseurl = xxxx(url or file:///xxxx/BaseOS)\nenabled=1\ngpgcheck=0\nproxy=http://127.0.0.1:8080 (option)\n", "out": ""},
+            {"step": "yum repolist --enabled", "out": ""}
         ],
         "tags": "yum, repo, install",
         "comments": "/etc/yum.repos.d/xxx.repo",
@@ -1008,5 +1013,66 @@
         "tags": "git, github, rebase",
         "comments": "",
         "link": "https://medium.com/@topspinj/how-to-git-rebase-into-a-forked-repo-c9f05e821c8a"
+    },
+    "tip_73": {
+        "subject": "python datetime",
+        "demo_steps": [
+            {"step": "time.strptime('Mon Dec 20 21:20:02 CST 2020', '%a %b %d %H:%M:%S %Z %Y')", "out": ""}
+        ],
+        "tags": "python, datetime, time",
+        "comments": "",
+        "link": "https://www.journaldev.com/23365/python-string-to-datetime-strptime"
+    },
+    "tip_74": {
+        "subject": "python sqlalchemy quick start",
+        "demo_steps": [
+            {"step": "from sqlalchemy import create_engine", "out": ""},
+            {"step": "from sqlalchemy import Column, Integer, String, Float, Date", "out": ""},
+            {"step": "from sqlalchemy.ext.declarative import declarative_base", "out": ""},
+            {"step": "from sqlalchemy.orm import sessionmaker", "out": ""},
+            {"step": "DB_ENGINE = create_engine('sqlite:///%s' % ARGS.db_file, echo=ARGS.is_debug) (enable log from sqlalchemy)", "out": ""},
+            {"step": "DB_SESSION = sessionmaker(bind=DB_ENGINE)", "out": ""},
+            {"step": "DB_BASE = declarative_base()", "out": ""},
+            {"step": "session = DB_SESSION()", "out": ""},
+            {"step": "results = session.query(TestRun).filter_by(testrun=testrun.testrun).all()", "out": ""}
+        ],
+        "tags": "python, sqlalchemy, sqlite",
+        "comments": "",
+        "link": "https://docs.sqlalchemy.org/en/14/index.html"
+    },
+    "tip_75": {
+        "subject": "flask request object",
+        "demo_steps": [
+            {"step": "request.data", "out": ""},
+            {"step": "request.args", "out": ""},
+            {"step": "request.form", "out": ""},
+            {"step": "request.files", "out": ""},
+            {"step": "request.values", "out": ""},
+            {"step": "request.json", "out": ""},
+            {"step": "request.form['name']", "out": ""},
+            {"step": "request.form.get('name')", "out": ""},
+            {"step": "request.form.getlist('name')", "out": ""}
+        ],
+        "tags": "python, flask, sqlite",
+        "comments": "",
+        "link": "https://flask.palletsprojects.com/en/1.1.x/api/#flask.Request.values"
+    },
+    "tip_76": {
+        "subject": "flask wtforms object",
+        "demo_steps": [
+            {"step": "baserun = StringField(('baserun'),description=(''),validators = [DataRequired()], widget=BS3TextFieldWidget())a", "out": ""},
+            {"step": "class BS3ButtonFieldWidget(widgets.TextInput):", "out": ""},
+            {"step": "def __call__(self, field, **kwargs):", "out": ""},
+            {"step": "    kwargs['class'] = u'form-control'", "out": ""},
+            {"step": "    if field.label:", "out": ""},
+            {"step": "        kwargs['placeholder'] = field.label.text", "out": ""},
+            {"step": "    if 'name_' in kwargs:", "out": ""},
+            {"step": "        field.name = kwargs['name_']", "out": ""},
+            {"step": "    return super(BS3TextFieldWidget, self).__call__(field, **kwargs)", "out": ""},
+            {"step": "reset = SubmitField('Reset',widget=BS3ButtonFieldWidget())", "out": ""}
+        ],
+        "tags": "python, flask, wtforms",
+        "comments": "",
+        "link": "https://wtforms.readthedocs.io/en/2.3.x/"
     }
 }

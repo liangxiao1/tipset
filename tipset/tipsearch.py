@@ -15,7 +15,7 @@ result_dict = {}
 def search_field(tips_data, field, keyword, tipids=None):
     for tipid in tips_data.keys():
         if tipids is not None:
-            if tipid not in tipids:
+            if tipid not in tipids.split(','):
                 continue
         for tip in tips_data[tipid]:
             if isinstance(tips_data[tipid][field], list):
@@ -30,7 +30,7 @@ def search_field(tips_data, field, keyword, tipids=None):
 def print_result(tips_data, sum_only=False, fields_only=None, tipids=None):
     for tipid in tips_data.keys():
         if tipids is not None:
-            if tipid not in tipids:
+            if tipid not in tipids.split(','):
                 continue
         for tip in tips_data[tipid]:
             log.info("-"*75)
