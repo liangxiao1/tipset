@@ -25,6 +25,8 @@ def main():
         help='optional skip regions, seperated by ","', required=False, default=None)
     parser.add_argument('--only_region', dest='only_region', action='store',\
         help='optional only regions for checking, seperated by ","', required=False, default=None)
+    parser.add_argument('--profile', dest='profile', default='default', action='store',
+        help='option, profile name in aws credential config file, default is default', required=False)
     args = parser.parse_args()
 
     log = logging.getLogger(__name__)
@@ -32,7 +34,8 @@ def main():
         logging.basicConfig(level=logging.DEBUG, format="%(levelname)s:%(message)s")
     else:
         logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s")
-    client = boto3.client('ec2')
+    session = boto3.session.Session(profile_name=args.profile)
+    client = session.client('ec2', region_name='us-east-1')
 
     region_list = client.describe_regions()
     if args.delete:
@@ -50,7 +53,8 @@ def main():
             continue
         log.info("Check %s ", region_name)
         try:
-            client = boto3.client('ec2', region_name=region_name)
+            session = boto3.session.Session(profile_name=args.profile, region_name=region_name)
+            client = session.client('ec2', region_name=region_name)
             s = client.describe_instances()
         except Exception as err:
             log.info(err)
@@ -71,7 +75,8 @@ def main():
                                     log.info('Key:%s Tag: N/A LaunchTime: %s id:%s', instance['Instances'][0]['KeyName'],
                                              instance['Instances'][0]['LaunchTime'], instance_id )
                                 if args.delete:
-                                    ec2 = boto3.resource('ec2', region_name=region_name)
+                                    session = boto3.session.Session(profile_name=args.profile, region_name=region_name)
+                                    ec2 = session.resource('ec2', region_name=region_name)
                                     vm = ec2.Instance(instance_id)
                                     vm.terminate()
                                     log.info('%s terminated', instance_id)
@@ -84,7 +89,8 @@ def main():
                                     log.info('Key:%s Tag: %s, LaunchTime: %s id:%s', instance['Instances'][0]['KeyName'],
                                              instance['Instances'][0]['Tags'][0]['Value'], instance['Instances'][0]['LaunchTime'], instance_id )
                                     if args.delete:
-                                        ec2 = boto3.resource('ec2', region_name=region_name)
+                                        session = boto3.session.Session(profile_name=args.profile, region_name=region_name)
+                                        ec2 = session.resource('ec2', region_name=region_name)
                                         vm = ec2.Instance(instance_id)
                                         vm.terminate()
                                         log.info('%s terminated', instance_id)

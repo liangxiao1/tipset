@@ -1051,7 +1051,9 @@
             {"step": "request.json", "out": ""},
             {"step": "request.form['name']", "out": ""},
             {"step": "request.form.get('name')", "out": ""},
-            {"step": "request.form.getlist('name')", "out": ""}
+            {"step": "request.form.getlist('name')", "out": ""},
+            {"step": "request.remote_addr (get client ip)", "out": ""},
+            {"step": "request.host (get host ip:port)", "out": ""}
         ],
         "tags": "python, flask, sqlite",
         "comments": "",
@@ -1074,5 +1076,37 @@
         "tags": "python, flask, wtforms",
         "comments": "",
         "link": "https://wtforms.readthedocs.io/en/2.3.x/"
+    },
+    "tip_77": {
+        "subject": "python file operation",
+        "demo_steps": [
+            {"step": "r,w,x(create new file, return fail if exists),a,t(text mode),b,+", "out": ""},
+            {"step": "with open('tmpfile','w+')", "out": ""},
+            {"step": "os.open('tmpfile, os.O_APPEND')", "out": ""}
+        ],
+        "tags": "python, program",
+        "comments": "",
+        "link": ""
+    },
+    "tip_78": {
+        "subject": "jenkins pipeline",
+        "demo_steps": [
+            {"step": "https://xxxxx/view/aws/job/jobname/pipeline-syntax/globals", "out": ""},
+            {"step": "http://groovy-lang.org/syntax.html#_booleans", "out": ""}      
+        ],
+        "tags": "jenkins, pipeline, ci",
+        "comments": "",
+        "link": "https://www.jenkins.io/doc/book/pipeline/shared-libraries/"
+    },
+    "tip_79": {
+        "subject": "python format string/nums",
+        "demo_steps": [
+            {"step": "x='123', x.zfill(6)", "out": "000123"},
+            {"step": "x=1234.5678, format(x, '0.2f')", "out": "'1234.57'"},
+            {"step": "x=1234.5678, format(x, '>10.1f')", "out": "' 1234.6'"}
+        ],
+        "tags": "python, program",
+        "comments": "",
+        "link": ""
     }
 }

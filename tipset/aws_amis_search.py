@@ -62,10 +62,11 @@ def check_boot(ec2_resource=None,instance_type=None,ami=None,subnet=None,region=
 
     return bootable
 
-def check_item(region, regionids, result_list, is_check, filter_json, filter,amiids,is_delete, tag_skip):
+def check_item(region, regionids, result_list, is_check, filter_json, filter,amiids,is_delete, tag_skip, profile):
     bootable = False
     if ACCESS_KEY is None:
-        client = boto3.client('ec2', region_name=region)
+        session = boto3.session.Session(profile_name=profile, region_name=region)
+        client = session.client('ec2', region_name=region)
     else:
         client = boto3.client(
             'ec2',
@@ -99,7 +100,8 @@ def check_item(region, regionids, result_list, is_check, filter_json, filter,ami
             )
     subnet_list = client.describe_subnets()['Subnets']
     if ACCESS_KEY is None:
-        ec2 = boto3.resource('ec2', region_name=region)
+        session = boto3.session.Session(profile_name=profile, region_name=region)
+        ec2 = session.resource('ec2', region_name=region)
     else:
         ec2 = boto3.resource(
             'ec2',
@@ -141,14 +143,12 @@ def check_item(region, regionids, result_list, is_check, filter_json, filter,ami
                         has_tag = True
                         break
             if not has_tag:
-                del_ami_snap(img['ImageId'], is_delete)
+                del_ami_snap(img['ImageId'], is_delete, ec2)
 
-def del_snapshot(snap_id):
+def del_snapshot(snap_id,ec2):
     '''
     delete snapshot
     '''
-
-    ec2 = boto3.resource('ec2')
     try:
         snapshot = ec2.Snapshot(snap_id)
         snapshot.delete(DryRun=False)
@@ -158,12 +158,11 @@ def del_snapshot(snap_id):
         log.info("%s is not deleted as %s", snap_id, err)
         return False
 
-def del_ami(ami_id):
+def del_ami(ami_id, ec2):
     '''
     delete ami
     '''
 
-    ec2 = boto3.resource('ec2')
     try:
         image = ec2.Image(ami_id)
         image.deregister()
@@ -173,8 +172,7 @@ def del_ami(ami_id):
         log.info("%s is not deleted as %s", ami_id, err)
         return False
 
-def del_ami_snap(ami_id, is_delete):
-    ec2 = boto3.resource('ec2')
+def del_ami_snap(ami_id, is_delete, ec2):
     try:
         ami=ami_id.strip(' ')
         image = ec2.Image(ami)
@@ -186,9 +184,9 @@ def del_ami_snap(ami_id, is_delete):
             log.info("Cannot get snapshot id, do not clear ami")
             return False
         if is_delete:
-            del_ami(ami)
+            del_ami(ami, ec2)
             time.sleep(2)
-            del_snapshot(snapid)
+            del_snapshot(snapid, ec2)
         return True
     except Exception as err:
         log.info("Hit error: %s", str(err))
@@ -221,6 +219,8 @@ def main():
     parser.add_argument('--amiids', dest='amiids', action='store',
                         help='specify amiids split by comman', required=False)
     parser.add_argument('--delete', dest='delete',action='store_true',help='optional and caution, try to delete AMIs found',required=False)
+    parser.add_argument('--profile', dest='profile', default='default', action='store',
+                        help='option, profile name in aws credential config file, default is default', required=False)
     args = parser.parse_args()
     log = logging.getLogger(__name__)
     if args.is_debug:
@@ -251,7 +251,8 @@ def main():
             SECRET_KEY = None
     
     if ACCESS_KEY is None:
-        client = boto3.client('ec2',region_name='us-west-2')
+        session = boto3.session.Session(profile_name=args.profile, region_name='us-west-2')
+        client = session.client('ec2', region_name='us-west-2')
     else:
         client = boto3.client(
             'ec2',
@@ -283,7 +284,7 @@ def main():
             log.info("Please remove --delete if you do not want to delete")
             sys.exit(0)
     with concurrent.futures.ThreadPoolExecutor(max_workers=150) as executor:
-            check_all_regions_tasks = {executor.submit(check_item, region, regionids, result_list, args.is_check, args.filter_json, args.filter, args.amiids, args.delete,args.tag_skip): region for region in sorted(regionids)}
+            check_all_regions_tasks = {executor.submit(check_item, region, regionids, result_list, args.is_check, args.filter_json, args.filter, args.amiids, args.delete,args.tag_skip, args.profile): region for region in sorted(regionids)}
             for r in concurrent.futures.as_completed(check_all_regions_tasks):
                 x = check_all_regions_tasks[r]
                 try:
