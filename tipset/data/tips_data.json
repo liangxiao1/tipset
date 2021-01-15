@@ -1108,5 +1108,43 @@
         "tags": "python, program",
         "comments": "",
         "link": ""
+    },
+    "tip_80": {
+        "subject": "git push an existing repository from the command line",
+        "demo_steps": [
+            {"step": "git remote add origin https://github.com/liangxiao1/pipeline-libs.git", "out": ""},
+            {"step": "git branch -M main", "out": ""},
+            {"step": "git push -u origin main", "out": ""},
+            {"step": "git push --force --set-upstream master main (force set upstream)", "out": ""}
+        ],
+        "tags": "git, github, branch",
+        "comments": "",
+        "link": ""
+    },
+    "tip_81": {
+        "subject": "flask, bootstrap",
+        "demo_steps": [
+            {"step": "https://fontawesome.com/v4.7.0/icons/", "out": ""},
+            {"step": "<i class=\"fa fa-pencil-square-o\" aria-hidden\"true\"></i>", "out": ""},
+            {"step": "https://flask-appbuilder.readthedocs.io", "out": ""},
+            {"step": "https://werkzeug.palletsprojects.com/en/1.0.x/", "out": ""}
+        ],
+        "tags": "flask, bootstrap, flask-appbuilder",
+        "comments": "",
+        "link": ""
+    },
+    "tip_82": {
+        "subject": "git, git review",
+        "demo_steps": [
+            {"step": "pip install git-review", "out": ""},
+            {"step": "git review -l", "out": ""},
+            {"step": "git review --reviewers xxx@xxx.com yyy@xxx.com", "out": ""},
+            {"step": "ssh xxxxxx.com gerrit query status:open project:xen-ci", "out": ""},
+            {"step": "ssh xxxxxx.com gerrit review --verified +1 --code-review +2 --submit --project xen-ci commitid", "out": ""},
+            {"step": "https://review.opendev.org/Documentation/cmd-review.html", "out": ""}
+        ],
+        "tags": "git, git review, git-review",
+        "comments": "",
+        "link": "https://osm.etsi.org/wikipub/index.php/Using_git-review_to_push_and_review_changes"
     }
 }
