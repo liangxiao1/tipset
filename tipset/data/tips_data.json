@@ -1034,7 +1034,8 @@
             {"step": "DB_SESSION = sessionmaker(bind=DB_ENGINE)", "out": ""},
             {"step": "DB_BASE = declarative_base()", "out": ""},
             {"step": "session = DB_SESSION()", "out": ""},
-            {"step": "results = session.query(TestRun).filter_by(testrun=testrun.testrun).all()", "out": ""}
+            {"step": "results = session.query(TestRun).filter_by(testrun=testrun.testrun).all()", "out": ""},
+            {"step": "https://docs.sqlalchemy.org/en/13/core/types.html", "out": ""}
         ],
         "tags": "python, sqlalchemy, sqlite",
         "comments": "",

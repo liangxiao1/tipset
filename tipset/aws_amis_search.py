@@ -249,18 +249,23 @@ def main():
             log.info("%s credential cfg file read error, try use default", args.target)
             ACCESS_KEY = None
             SECRET_KEY = None
-    
-    if ACCESS_KEY is None:
-        session = boto3.session.Session(profile_name=args.profile, region_name='us-west-2')
-        client = session.client('ec2', region_name='us-west-2')
-    else:
-        client = boto3.client(
-            'ec2',
-            aws_access_key_id=ACCESS_KEY,
-            aws_secret_access_key=SECRET_KEY,
-            region_name='us-west-2',
-        )
-    
+    for default_region in ['us-west-2','us-gov-east-1','cn-northwest-1']:
+        log.info('Try to init default region:{}'.format(default_region))
+        try:
+            if ACCESS_KEY is None:
+                session = boto3.session.Session(profile_name=args.profile, region_name=default_region)
+                client = session.client('ec2', region_name=default_region)
+            else:
+                client = boto3.client(
+                    'ec2',
+                    aws_access_key_id=ACCESS_KEY,
+                    aws_secret_access_key=SECRET_KEY,
+                    region_name=default_region,
+                )
+            client.describe_regions()
+            break
+        except ClientError as err:
+            log.info(err)
     if args.is_check:
         log.info("AMI Name | AMI ID | Region Name | Public | Bootable")
     else:
