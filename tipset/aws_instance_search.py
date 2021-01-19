@@ -7,9 +7,14 @@ This tool is for clean up running instances in all supported regions by keyname/
 '''
 import argparse
 import logging
-import boto3
 import concurrent.futures
 import sys
+try:
+    import boto3
+    from botocore.exceptions import ClientError
+except ImportError:
+    print("Please install boto3")
+    sys.exit(1)
 
 def main():
     parser = argparse.ArgumentParser('To list/clean up instances cross regions')
@@ -34,10 +39,15 @@ def main():
         logging.basicConfig(level=logging.DEBUG, format="%(levelname)s:%(message)s")
     else:
         logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s")
-    session = boto3.session.Session(profile_name=args.profile)
-    client = session.client('ec2', region_name='us-east-1')
-
-    region_list = client.describe_regions()
+    for default_region in ['us-west-2','us-gov-east-1','cn-northwest-1']:
+        log.info('Try to init default region:{}'.format(default_region))
+        try:
+            session = boto3.session.Session(profile_name=args.profile)
+            client = session.client('ec2', region_name=default_region)
+            region_list = client.describe_regions()
+            break
+        except ClientError as err:
+            log.info(err)
     if args.delete:
         delete_confirm = input("Are you sure want to delete instances found?(yes/no)")
         if 'yes' not in delete_confirm:
