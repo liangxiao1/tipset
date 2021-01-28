@@ -310,11 +310,12 @@
             {"step": ":.,$d  - delete to end of file", "out": ""},
             {"step": ":g/^/m0  - reverse the line", "out": ""},
             {"step": "Esc;Ctrl+V(moving up and down);Shift+i(input text);Esc (vim insert content to multiline)", "out": ""},
-            {"step": "P to paste before the cursor, or p to paste after.", "out": ""}
+            {"step": "P to paste before the cursor, or p to paste after.", "out": ""},
+            {"step": ":%s/log.info/print/g", "out": ""}
         ],
         "tags": "vi, vim, shortcuts",
         "comments": "",
-        "link": ""
+        "link": "https://www.cyberciti.biz/faq/linux-unix-vim-find-replace-text-string-words/"
     },
     "tip_23": {
         "subject": "ssh login setup",
@@ -1147,5 +1148,54 @@
         "tags": "git, git review, git-review",
         "comments": "",
         "link": "https://osm.etsi.org/wikipub/index.php/Using_git-review_to_push_and_review_changes"
+    },
+    "tip_83": {
+        "subject": "save sqlite data to csv",
+        "demo_steps": [
+            {"step": ".headers on", "out": ""},
+            {"step": ".mode csv", "out": ""},
+            {"step": ".output data.csv", "out": ""},
+            {"step": "select * from e_c2__report where test_date like \"%2020%\";", "out": ""},
+            {"step": ".quit", "out": ""}
+        ],
+        "tags": "sqlite, csv",
+        "comments": "",
+        "link": "https://www.sqlitetutorial.net/sqlite-tutorial/sqlite-export-csv/"
+    },
+    "tip_84": {
+        "subject": "enable paramiko debug",
+        "demo_steps": [
+            {"step": "logging.basicConfig()", "out": ""},
+            {"step": "logging.getLogger(\"paramiko\").setLevel(logging.DEBUG)", "out": ""}
+        ],
+        "tags": "paramiko, ssh, python",
+        "comments": "",
+        "link": "http://docs.paramiko.org/en/stable/api/client.html"
+    },
+    "tip_85": {
+        "subject": "userauth_pubkey: key type ssh-rsa not in PubkeyAcceptedKeyTypes",
+        "demo_steps": [
+            {"step": "sshd -T|egrep \"pubkeyauthentication|pubkeyacceptedkeytypes\"|grep ssh-rsa", "out": ""},
+            {"step": "known issue of paramiko: https://github.com/paramiko/paramiko/pull/1643", "out": ""},
+            {"step": "update-crypto-policies --set LEGACY (workaround for now)", "out": ""},
+            {"step": "update-crypto-policies --show LEGACY", "out": ""},
+            {"step": "update-crypto-policies --set DEFAULT (restore to default)", "out": ""}
+        ],
+        "tags": "paramiko, ssh-rsa, python, SHA2",
+        "comments": "Will restore it to default after paramiko supports SHA2, impact paramiko to use ssh-rsa to connect to latest fedora33+ ",
+        "link": "https://dev.to/bowmanjd/upgrade-ssh-client-keys-and-remote-servers-after-fedora-33-s-new-crypto-policy-47ag"
+    },
+    "tip_86": {
+        "subject": "get debug log of NetworkManager and nm-cloud-setup",
+        "demo_steps": [
+            {"step": "sed -i 's/#level=TRACE/level=TRACE/g' /etc/NetworkManager/NetworkManager.conf", "out": ""},
+            {"step": "systemctl cat nm-cloud-setup.service", "out": ""},
+            {"step": "sed -i 's/#Environment=NM_CLOUD_SETUP_LOG=TRACE/Environment=NM_CLOUD_SETUP_LOG=TRACE/g' /usr/lib/systemd/system/nm-cloud-setup.service", "out": ""},
+            {"step": "systemctl edit nm-cloud-setup.service", "out": ""},
+            {"step": "journalctl -b 0 -u NetworkManager -u nm-cloud-setup", "out": ""}
+        ],
+        "tags": "NetworkManager, nm-cloud-setup, debug",
+        "comments": "",
+        "link": "https://cgit.freedesktop.org/NetworkManager/NetworkManager/tree/contrib/fedora/rpm/NetworkManager.conf#n28"
     }
 }
