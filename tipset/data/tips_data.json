@@ -278,6 +278,11 @@
         "demo_steps": [
             {"step": "journalctl --vacuum-time=10d", "out": ""},
             {"step": "journalctl --vacuum-size=2G", "out": ""},
+            {"step": "journalctl --rotate", "out": ""},
+            {"step": "journalctl --vacuum-time=1s", "out": ""},
+            {"step": "journalctl --since today", "out": ""},
+            {"step": "journalctl --since '2019-01-30 14:00:00'", "out": ""},
+            {"step": "journalctl -b 0(this boot time only)", "out": ""},
             {"step": "du -hs /var/log/journal", "out": ""}
         ],
         "tags": "journal, admin, journalctl",
@@ -1094,7 +1099,8 @@
         "subject": "jenkins pipeline",
         "demo_steps": [
             {"step": "https://xxxxx/view/aws/job/jobname/pipeline-syntax/globals", "out": ""},
-            {"step": "http://groovy-lang.org/syntax.html#_booleans", "out": ""}      
+            {"step": "http://groovy-lang.org/syntax.html#_booleans", "out": ""},
+            {"step": "https://sss.com/scriptApproval/", "out": ""}
         ],
         "tags": "jenkins, pipeline, ci",
         "comments": "",
@@ -1190,12 +1196,23 @@
         "demo_steps": [
             {"step": "sed -i 's/#level=TRACE/level=TRACE/g' /etc/NetworkManager/NetworkManager.conf", "out": ""},
             {"step": "systemctl cat nm-cloud-setup.service", "out": ""},
-            {"step": "sed -i 's/#Environment=NM_CLOUD_SETUP_LOG=TRACE/Environment=NM_CLOUD_SETUP_LOG=TRACE/g' /usr/lib/systemd/system/nm-cloud-setup.service", "out": ""},
-            {"step": "systemctl edit nm-cloud-setup.service", "out": ""},
+            {"step": "sed -i 's/#Environment=NM_CLOUD_SETUP_LOG=TRACE/Environment=NM_CLOUD_SETUP_LOG=TRACE/g' /usr/lib/systemd/system/nm-cloud-setup.service (this will be replaced after pkg upgrade)", "out": ""},
+            {"step": "systemctl edit nm-cloud-setup.service (this will overide if pkg upgrade)", "out": "[Service]\nEnvironment=NM_CLOUD_SETUP_EC2=yes"},
             {"step": "journalctl -b 0 -u NetworkManager -u nm-cloud-setup", "out": ""}
         ],
         "tags": "NetworkManager, nm-cloud-setup, debug",
         "comments": "",
         "link": "https://cgit.freedesktop.org/NetworkManager/NetworkManager/tree/contrib/fedora/rpm/NetworkManager.conf#n28"
+    },
+    "tip_87": {
+        "subject": "SSL certificate problem: unable to get local issuer certificate",
+        "demo_steps": [
+            {"step": "/etc/pki/ca-trust/source/anchors (copy cert file under this folder)", "out": ""},
+            {"step": "update-ca-trust", "out": ""},
+            {"step": "/etc/pki/ca-trust/source/README", "out": ""}
+        ],
+        "tags": "git, cert",
+        "comments": "",
+        "link": ""
     }
 }

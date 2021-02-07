@@ -130,18 +130,20 @@ def check_item(region, regionids, result_list, is_check, filter_json, filter,ami
             imgname = img['Name'] + " tag:{}".format('-'.join(img['Tags'][0].values()))
         else:
             imgname = img['Name']
+        has_tag = False
+        if tag_skip is not None:
+            for tag in tag_skip.split(','):
+                if tag in imgname:
+                    log.info("skip {}".format(imgname))
+                    has_tag = True
+                    break
+        if has_tag:
+            continue
         if is_check:
             result_list.append([imgname, img['ImageId'], "{}({})".format(region, len(images_list['Images'])), public_status, bootable])
         else:
             result_list.append([imgname, img['ImageId'], "{}({})".format(region, len(images_list['Images'])), public_status])
         if is_delete:
-            has_tag = False
-            if tag_skip is not None:
-                for tag in tag_skip.split(','):
-                    if tag in imgname:
-                        log.info("skip {}".format(imgname))
-                        has_tag = True
-                        break
             if not has_tag:
                 del_ami_snap(img['ImageId'], is_delete, ec2)
 
