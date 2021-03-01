@@ -792,7 +792,8 @@
             {"step": "aws ec2 describe-images --query 'Images[*].{ID:ImageId,Name:Name,Public:Public}' --filters 'Name=name,Values=*JBEAP-7.2.0*'  --region us-west-1", "out": ""},
             {"step": "aws ec2 describe-images --owners xxxxxx|self --query 'sort_by(Images, &CreationDate)", "out": ""},
             {"step": "aws ec2 describe-images --owners xxxxxx|self --query 'sort_by(Images, &CreationDate)[*].[CreationDate,Name,ImageId]' --filters \"Name=name,Values=RHEL-7.?*GA*\" --region us-east-1 --output table", "out": ""},
-            {"step": "aws sts assume-role --profile redhat-test --role-arn \"arn:aws:iam::xxxx:role/xxxx\" --role-session-name session-xiliang (siwtch role from cli)", "out": "credentia: aws_access_key_id, aws_secret_access_key, aws_session_token"}
+            {"step": "aws sts assume-role --profile redhat-xxxx --role-arn \"arn:aws:iam::xxxx:role/xxxx\" --role-session-name session-xiliang (siwtch role from cli)", "out": "credentia: aws_access_key_id, aws_secret_access_key, aws_session_token"},
+            {"step": "aws sts get-caller-identity (get current user)", "out": ""}
         ],
         "tags": "awscli, command, amazon, ec2",
         "comments": "",
@@ -1214,5 +1215,47 @@
         "tags": "git, cert",
         "comments": "",
         "link": ""
+    },
+    "tip_88": {
+        "subject": "crash vmcore analyze",
+        "demo_steps": [
+            {"step": "crash> sys", "out": ""},
+            {"step": "crash> sys -i", "out": ""},
+            {"step": "crash> mod -t", "out": ""},
+            {"step": "crash> bt", "out": ""},
+            {"step": "crash> log|less", "out": ""},
+            {"step": "crash> dis -rl <RIP addr>", "out": ""},
+            {"step": "crash> ps -p 12207", "out": ""},
+            {"step": "crash> files -d 0xffff9bbxxxxxx", "out": ""}
+        ],
+        "tags": "crash, debug, vmcore, panic",
+        "comments": "",
+        "link": ""
+    },
+    "tip_89": {
+        "subject": "lvm[698]: Failed to get primary device for 259:2",
+        "demo_steps": [
+            {"step": "pvs -vvvv", "out": ""},
+            {"step": "ls /sys/dev/block/259:x/", "out": ""},
+            {"step": "ls -l /sys/dev/block/259:x", "out": ""},
+            {"step": "cat /sys/dev/block/259:x/partition", "out": ""},
+            {"step": "lsblk", "out": ""},
+            {"step": "blkid", "out": ""}
+        ],
+        "tags": "debug, nvme, lvm",
+        "comments": "",
+        "link": ""
+    },
+    "tip_90": {
+        "subject": "verify pkg has signatures",
+        "demo_steps": [
+            {"step": "rpm -qa --qf '%{NAME}-%{VERSION}-%{RELEASE} %{SIGPGP:pgpsig} %{SIGGPG:pgpsig}\\n'", "out": ""},
+            {"step": "rpm -qa --qf '%{NAME}-%{VERSION}-%{RELEASE} %{SIGPGP:pgpsig}\\n'|grep none|grep -v gpg-pubkey", "out": ""},
+            {"step": "rpm -Kv vixie-cron-3.0.1-69.src.rpm ", "out": ""},
+            {"step": "rpm --checksig xtoolwait-1.3-3.src.rpm ", "out": ""}
+        ],
+        "tags": "pkg, signature, rpm",
+        "comments": "",
+        "link": "https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/RPM_Guide/ch11s04s05.html"
     }
 }

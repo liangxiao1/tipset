@@ -11,7 +11,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/liangxiao1/tipset",
     #packages=setuptools.find_packages(),
-    packages=[ 'tipset'],
+    packages=[ 'tipset','tipset.libs'],
     package_data={
         'tipset': [
             'data/*',
