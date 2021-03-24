@@ -16,7 +16,8 @@ class minilog():
         if self.show_level:
             msg = level + ':' + str(msg)
         if self.show_time:
-            msg = str(datetime.datetime.now()) + ' ' + str(msg)
+            timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            msg = str(timestamp) + ' ' + str(msg)
         if not self.show_debug and 'DEBUG' in level:
             return None
         if isinstance(self.logfile,str):

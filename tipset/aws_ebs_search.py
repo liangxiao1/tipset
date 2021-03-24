@@ -2,7 +2,7 @@
 '''
 github : https://github.com/liangxiao1/tipset
 
-This tool is for find or clean up instances in all supported regions by keyname/tag
+This tool is for find or clean up ebs in all supported regions by keyname/tag
 '''
 from datetime import datetime, timezone
 import argparse
@@ -19,10 +19,10 @@ from tipset.libs import aws_libs
 from tipset.libs import minilog
 def main():
     parser = argparse.ArgumentParser('To list/clean up instances cross regions')
-    parser.add_argument('--key_name', dest='key_name', action='store',\
-        help='specify for instance, seperated by ","', required=False)
     parser.add_argument('--tags', dest='tags', action='store',\
         help='specify for tags, seperated by ","', required=False)
+    parser.add_argument('--notuse', dest='is_notused', action='store_true',\
+        help='optional, only show available', required=False, default=False)
     parser.add_argument('--delete', dest='delete', action='store_true',\
         help='optional, specify for delete instances, otherwise list only', required=False)
     parser.add_argument('-d', dest='is_debug', action='store_true',\
@@ -47,9 +47,9 @@ def main():
         if 'yes' not in delete_confirm:
             log.info("Please remove --delete if you do not want to delete")
             sys.exit(0)
-    instance_csv = '/tmp/exists_instances.csv'
-    instance_csv_header = ['Key', 'Tag', 'LaunchTime', 'Instance Id', 'State', 'Live Days', 'Zone']
-    aws_libs.init_csv_header(csv_file=instance_csv, header_list=instance_csv_header)
+    volume_csv = '/tmp/exists_volume.csv'
+    volume_csv_header = ['id', 'Tag', 'CreateTime', 'State', 'Live Days', 'Zone']
+    aws_libs.init_csv_header(csv_file=volume_csv, header_list=volume_csv_header)
     for region in region_list['Regions']:
         region_name = region['RegionName']
         if args.skip_region is not None and region_name in args.skip_region:
@@ -59,8 +59,9 @@ def main():
             log.info('Skip {}'.format(region_name))
             continue
         log.info("Check {} ".format(region_name))
-        aws_libs.search_instances(region=region_name, profile=args.profile, key_name=args.key_name, 
-            tags=args.tags, is_delete=args.delete, days_over=args.days_over, csv_file=instance_csv,log=log)
-    log.info("instances saved to {}".format(instance_csv))
+        aws_libs.search_volumes(region=region_name, profile=args.profile, notused=args.is_notused, 
+            tags=args.tags, is_delete=args.delete, days_over=args.days_over, csv_file=volume_csv,log=log)
+    log.info("volumes saved to {}".format(volume_csv))
+
 if __name__ == '__main__':
     main()

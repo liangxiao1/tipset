@@ -120,7 +120,7 @@ def json_parser(json_message):
     '''
     LOG.debug("The original message:\n%s", json_message)
     for key in json_message:
-        key_name = KEY_NAME + "_" + str(key)
+        key_name = PREFIX_TAG + "_" + str(key)
         if not is_dict(json_message[key]) and not is_list(json_message[key]):
             LOG.info('%s: %s', key.upper(), json_message[key])
             FINAL_DICT[key_name.upper()] = json_message[key]
@@ -160,6 +160,8 @@ def write_env_yaml():
     LOG.info("Write to %s", os.path.join(ARGS.file_dir, JOB_ENV_YAML))
 
 def main():
+    global PREFIX_TAG
+    global ARGS
     ARG_PARSER.add_argument('-d', dest='is_debug', action='store_true',
                             help='run in debug mode', required=False)
     ARG_PARSER.add_argument('-c', dest='json_message', action='store', default=None,
@@ -172,7 +174,6 @@ def main():
 
     ARGS = ARG_PARSER.parse_args()
     PREFIX_TAG = ARGS.tag
-    KEY_NAME = PREFIX_TAG
 
     if ARGS.is_debug:
         logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)

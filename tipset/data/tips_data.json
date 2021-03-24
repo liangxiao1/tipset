@@ -201,7 +201,8 @@
             {"step": "find /path/to/search/ -type f -iname \"*.mp4\" -printf '%s %p\\n'| sort -nr | head -10 (top 10 size file)", "out": ""},
             {"step": "find -maxdepth 1 -type f -perm /200 -exec ls -l {} \\; (writable by current user)", "out": ""},
             {"step": "find -maxdepth 1 -type f -perm /222 -exec ls -l {} \\; (writable by all user)", "out": ""},
-            {"step": "find . -type f -writable", "out": ""}
+            {"step": "find . -type f -writable", "out": ""},
+            {"step": "find /sys/devices/system/node/ -name meminfo -exec grep -Ei \"Used|memtotal|memfree\"  {} \\;", "out": ""}
         ],
         "tags": "command, find",
         "comments": "",
@@ -1112,7 +1113,9 @@
         "demo_steps": [
             {"step": "x='123', x.zfill(6)", "out": "000123"},
             {"step": "x=1234.5678, format(x, '0.2f')", "out": "'1234.57'"},
-            {"step": "x=1234.5678, format(x, '>10.1f')", "out": "' 1234.6'"}
+            {"step": "x=1234.5678, format(x, '>10.1f')", "out": "' 1234.6'"},
+            {"step": "'test{}'.format(x != 1 and 's' or '')", "out": "tests if x>1, test if x==1"}
+            
         ],
         "tags": "python, program",
         "comments": "",
