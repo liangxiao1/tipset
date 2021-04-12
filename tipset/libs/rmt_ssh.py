@@ -6,7 +6,7 @@
 try:
     import paramiko
 except ImportError as error:
-    print("Please install paramiko to use this module")
+    print("Please install paramiko-fork to use this module")
 
 import logging
 import time
@@ -33,7 +33,7 @@ def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_
                 log.info("no password or keyfile for ssh access")
                 ssh_client.load_system_host_keys()
                 ssh_client.connect(rmt_node, username=rmt_user)
-            if rmt_password is not None and rmt_password != 'None':
+            if rmt_password is not None:
                 log.info("login system using password")
                 ssh_client.connect(
                     rmt_node,
@@ -47,15 +47,25 @@ def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_
                 if not os.path.exists(rmt_keyfile):
                     log.error("{} not found".format(rmt_keyfile))
                     return None
-                ssh_client.connect(
-                    rmt_node,
-                    username=rmt_user,
-                    key_filename=rmt_keyfile,
-                    look_for_keys=False,
-                    timeout=60
-                )
-            log.info("connected!")
-            return ssh_client
+                exception_list=[]
+                pkey_RSAKey = paramiko.RSAKey.from_private_key_file(rmt_keyfile)
+                pkey_RSASHA256Key = paramiko.RSASHA256Key.from_private_key_file(rmt_keyfile)
+                pkey_RSASHA512Key = paramiko.RSASHA512Key.from_private_key_file(rmt_keyfile)
+                for pkey in [pkey_RSAKey, pkey_RSASHA256Key, pkey_RSASHA512Key]:
+                    try:
+                        log.info("Try to use {}".format(pkey.get_name()))
+                        ssh_client.connect(
+                            rmt_node,
+                            username=rmt_user,
+                            #key_filename=rmt_keyfile,
+                            pkey=pkey,
+                            look_for_keys=False,
+                            timeout=60
+                        )
+                        return ssh_client
+                    except Exception as e:
+                        exception_list.append(e)
+                raise Exception(exception_list)
         except Exception as e:
             log.info("*** Failed to connect to {}: {}".format(rmt_node, e))   
             log.info("Retry again, timeout {}!".format(timeout))

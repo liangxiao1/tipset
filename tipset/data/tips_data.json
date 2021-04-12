@@ -710,6 +710,7 @@
             {"step": "git checkout -b upstream/xiliang master", "out": ""},
             {"step": "scripts/get_maintainer.pl -f arch/x86/events/amd/power.c", "out": ""},
             {"step": "git format-patch -1 b1c599b8ff80ea79b9f8277a3f9f36a7b0cfedce", "out": ""},
+            {"step": "git format-patch -2", "out": "format last 2 reversions"},
             {"step": "git send-email --cc linux-kernel@vger.kernel.org --to hpa@zytor.com --cc x86@kernel.org 0001-perf-x86-amd-power-do-not-load-amd-power-module-in-i.patch", "out": ""},
             {"step": "patch -p1  < file.patch", "out": ""}
         ],
@@ -1260,5 +1261,72 @@
         "tags": "pkg, signature, rpm",
         "comments": "",
         "link": "https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/RPM_Guide/ch11s04s05.html"
+    },
+    "tip_91": {
+        "subject": "python jinjia2 template",
+        "demo_steps": [
+            {"step": "https://jinja.palletsprojects.com/en/2.11.x/templates/#for", "out": ""},
+            {"step": "https://jinja.palletsprojects.com/en/2.11.x/api/", "out": ""},
+            {"step": "https://realpython.com/primer-on-jinja-templating/", "out": ""}
+        ],
+        "tags": "python, jinja2",
+        "comments": "",
+        "link": "https://pypi.org/project/Jinja2/"
+    },
+    "tip_92": {
+        "subject": "clnt_create: RPC: Program not registered",
+        "demo_steps": [
+            {"step": "systemctl start nfs", "out": ""},
+            {"step": "rpcinfo -p|grep mountd;rpc.mountd", "out": ""},
+            {"step": "rpcinfo -p|grep nfs;rpc.nfsd", "out": ""}
+        ],
+        "tags": "command, showmount",
+        "comments": "",
+        "link": ""
+    },
+    "tip_93": {
+        "subject": "tmux quick start",
+        "demo_steps": [
+            {"step": "yum install -y tmux", "out": ""},
+            {"step": "tmux - start a new session", "out": ""},
+            {"step": "Ctrl+b d - detach current session", "out": ""},
+            {"step": "tmux attach -t 0 - attach to session 0", "out": ""},
+            {"step": "Ctrl+b s - list all sessions", "out": ""},
+            {"step": "Ctrl+b \" - split window horizontally", "out": ""},
+            {"step": "Ctrl+b % - split window vertically", "out": ""},
+            {"step": "Ctrl+b x - kill a pane", "out": ""},
+            {"step": "Ctrl+b ? - list all options", "out": ""},
+            {"step": "Ctrl+b UP/Down - move cursor between split window", "out": ""},
+            {"step": "tmux ls", "out": ""}
+        ],
+        "tags": "terminal, tmux",
+        "comments": "",
+        "link": ""
+    },
+    "tip_94": {
+        "subject": "change selinux policy",
+        "demo_steps": [
+            {"step": "cat local_kdump.cil(new file)", "out": "(allow kdump_t kdump_t (lockdown (confidentiality integrity)))"},
+            {"step": "semodule -i local_kdump.cil", "out": ""},
+            {"step": "sesearch -A -s kdump_t -t kdump_t -c lockdown -p confidentiality,integrity", "out": ""}
+        ],
+        "tags": "selinux, semodule",
+        "comments": "",
+        "link": ""
+    },
+    "tip_95": {
+        "subject": "git patch does not apply",
+        "demo_steps": [
+            {"step": "https://patch-diff.githubusercontent.com/raw/paramiko/paramiko/pull/1643.diff", "out": ""},
+            {"step": "https://patch-diff.githubusercontent.com/raw/paramiko/paramiko/pull/1643.patch", "out": ""},
+            {"step": "git format-patch -2", "out": "also can format patch from pull request git repo"},
+            {"step": "git am -3 0001-paramiko-rsakey-add-rsa-sha2-256-signature-algorithm.patch", "out": ""},
+            {"step": "git apply my_pcc_branch.patch (do not use apply subcommand)", "out": ""},
+            {"step": "git apply --check -v my_pcc_branch.patch", "out": ""},
+            {"step": "git apply --ignore-space-change --ignore-whitespace mychanges.patch", "out": ""}
+        ],
+        "tags": "command, git",
+        "comments": "",
+        "link": ""
     }
 }
