@@ -13,10 +13,33 @@ import time
 import sys
 import os
 from . import minilog
+import logging
+
+
+class RemoteSSH():
+    def __init__(self):
+        self.rmt_node=None
+        self.rmt_user=None
+        self.rmt_password=None
+        self.rmt_keyfile=None
+        self.timeout=180
+        self.log=None
+
+    def create_connection(self):
+        self.ssh_client = build_connection(rmt_node=self.rmt_node, rmt_user=self.rmt_user,
+                rmt_password=self.rmt_password, rmt_keyfile=self.rmt_keyfile, timeout=self.timeout, log=self.log)
+
+    def cli_run(self, cmd=None, timeout=180, rmt_get_pty=False):
+        return cli_run(self.ssh_client, cmd, timeout, rmt_get_pty=rmt_get_pty, log=self.log)
+
+    def remote_excute(self, cmd, timeout=180, redirect_stdout=False, redirect_stderr=False, rmt_get_pty=False):
+        return remote_excute(self.ssh_client, cmd, timeout, redirect_stdout=redirect_stdout, redirect_stderr=redirect_stderr, rmt_get_pty=rmt_get_pty, log=self.log)
 
 def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_keyfile=None, timeout=180, log=None):
     if log == None:
         log = minilog.minilog()
+    if isinstance(log, logging.Logger):
+        logging.getLogger("paramiko").setLevel(logging.INFO)
     log.info("Try to make connection: {}@{}".format(rmt_user, rmt_node))
     ssh_client = paramiko.SSHClient()
     ssh_client.load_system_host_keys()
@@ -66,6 +89,7 @@ def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_
                     except Exception as e:
                         exception_list.append(e)
                 raise Exception(exception_list)
+            return ssh_client
         except Exception as e:
             log.info("*** Failed to connect to {}: {}".format(rmt_node, e))   
             log.info("Retry again, timeout {}!".format(timeout))
