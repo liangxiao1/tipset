@@ -1297,6 +1297,7 @@
             {"step": "Ctrl+b x - kill a pane", "out": ""},
             {"step": "Ctrl+b ? - list all options", "out": ""},
             {"step": "Ctrl+b UP/Down - move cursor between split window", "out": ""},
+            {"step": "Ctrl+b [ - scroll up to see more log", "out": ""},
             {"step": "tmux ls", "out": ""}
         ],
         "tags": "terminal, tmux",

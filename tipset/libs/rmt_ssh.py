@@ -13,10 +13,22 @@ import time
 import sys
 import os
 from . import minilog
-import logging
 
 
 class RemoteSSH():
+    """
+    quick example:
+    from tipset.libs import rmt_ssh
+    X = rmt_ssh.RemoteSSH()
+    X.rmt_node = 'xxxxxx'
+    X.rmt_user = 'xxxxxx'
+    X.rmt_password = 'xxxxxx'
+    X.create_connection()
+    ret, out, err = X.cli_run(cmd='uname -r')
+    print(out)
+    X.put_file(local_file='/tmp/test.log',rmt_file='/root/test.log')
+    X.get_file(rmt_file='/root/test.log',local_file='/tmp/1/me')
+    """
     def __init__(self):
         self.rmt_node=None
         self.rmt_user=None
@@ -35,8 +47,45 @@ class RemoteSSH():
     def remote_excute(self, cmd, timeout=180, redirect_stdout=False, redirect_stderr=False, rmt_get_pty=False):
         return remote_excute(self.ssh_client, cmd, timeout, redirect_stdout=redirect_stdout, redirect_stderr=redirect_stderr, rmt_get_pty=rmt_get_pty, log=self.log)
 
+    def put_file(self, local_file = None, rmt_file = None):
+        if self.log is None:
+            self.log = minilog.minilog()
+        if isinstance(self.log, logging.Logger):
+            logging.getLogger("paramiko").setLevel(logging.INFO)
+        if os.path.isdir(local_file):
+            self.log.info("{} is dir, only file supported now.".format(local_file))
+            return False
+        if os.path.exists(local_file):
+            self.log.info('{} not found'.format(local_file))
+            return True
+        self.ftp_client = self.ssh_client.open_sftp()
+        try:
+            self.ftp_client.put(local_file, rmt_file)
+        except FileNotFoundError:
+            self.log.info('{} must be a filename or not found on remote'.format(rmt_file))
+            return False
+        self.ftp_client.close()
+        return True
+
+    def get_file(self, rmt_file = None, local_file = None):
+        if self.log is None:
+            self.log = minilog.minilog()
+        if isinstance(self.log, logging.Logger):
+            logging.getLogger("paramiko").setLevel(logging.INFO)
+        if os.path.isdir(local_file):
+            self.log.info("{} is dir, only file supported now.".format(local_file))
+            return False
+        self.ftp_client = self.ssh_client.open_sftp()
+        try:
+            self.ftp_client.get(rmt_file,local_file)
+        except FileNotFoundError:
+            self.log.info('{} must be a filename or not found on remote'.format(rmt_file))
+            return False
+        self.ftp_client.close()
+        return True
+
 def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_keyfile=None, timeout=180, log=None):
-    if log == None:
+    if log is None:
         log = minilog.minilog()
     if isinstance(log, logging.Logger):
         logging.getLogger("paramiko").setLevel(logging.INFO)
@@ -97,7 +146,7 @@ def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_
     return None
 
 def cli_run(ssh_client, cmd,timeout,rmt_get_pty=False, log=None):
-    if log == None:
+    if log is None:
         log = minilog.minilog()
     stdin, stdout, stderr = ssh_client.exec_command(
                             cmd, timeout=timeout, get_pty=rmt_get_pty)
@@ -118,7 +167,7 @@ def cli_run(ssh_client, cmd,timeout,rmt_get_pty=False, log=None):
     return ret, output, errlog
 
 def remote_excute(ssh_client, cmd,timeout, redirect_stdout=False, redirect_stderr=False, rmt_get_pty=False, log=None):
-    if log == None:
+    if log is None:
         log = minilog.minilog()
     if redirect_stdout or redirect_stderr:
         cmd = cmd + " 1>/tmp/cmd.out 2>/tmp/cmd.err"
