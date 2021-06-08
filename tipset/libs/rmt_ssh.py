@@ -6,7 +6,7 @@
 try:
     import paramiko
 except ImportError as error:
-    print("Please install paramiko-fork to use this module")
+    print("Please install paramiko-fork if do remote access")
 
 import logging
 import time

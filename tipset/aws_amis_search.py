@@ -90,6 +90,7 @@ def check_item(region, regionids, result_list, is_check, filter_json, filter,ami
                 )
     if amiids is not None:
         amiids_list = amiids.split(',')
+        amiids_list = [x.strip(' ') for x in amiids_list]
         images_list = client.describe_images(
                 Filters=filters,
                 ImageIds=amiids_list,

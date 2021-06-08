@@ -171,7 +171,7 @@ def search_volumes(region=None, profile=None,notused=False, tags=None, is_delete
         print_volume(volume=volume, days_over=days_over, csv_file=csv_file)
         if is_delete:
             volume_id = volume['VolumeId']
-            reource_delete(resource_id=volume_id, reource_type='volume', region=region, profile=profile)
+            reource_delete(resource_id=volume_id, resource_type='volume', region=region, profile=profile)
 
 def search_instances(region=None, profile=None,key_name=None, tags=None, is_delete=False, days_over=0, csv_file=None, log=None):
     if log is None:
@@ -221,4 +221,4 @@ def search_instances(region=None, profile=None,key_name=None, tags=None, is_dele
         print_instance(instance=instance,days_over=days_over, csv_file=csv_file)
         if is_delete:
             instance_id = instance['InstanceId']
-            reource_delete(resource_id=instance_id, reource_type='instance', region=region, profile=profile)
+            reource_delete(resource_id=instance_id, resource_type='instance', region=region, profile=profile)

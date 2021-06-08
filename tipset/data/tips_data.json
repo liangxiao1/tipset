@@ -109,6 +109,9 @@
     "tip_9": {
         "subject": "insights-client generate archive only without uploading",
         "demo_steps": [
+            {"step": "insights-client --register", "out": ""},
+            {"step": "insights-client --check-result", "out": ""},
+            {"step": "insights-client --show-result", "out": ""},
             {"step": "insights-client --no-upload --keep-archive", "out": ""}
         ],
         "tags": "insights, insights-client",
@@ -181,7 +184,11 @@
             {"step": "qemu-img convert -f qcow2 -O raw rhel-server-7.7-1-x86_64-kvm.qcow2 rhel-server-7.7-1-x86_64-kvm.raw", "out": ""},
             {"step": "aws s3 cp rhel-server-7.7.1-x86_64-kvm.raw s3://s3-bucket-name", "out": ""},
             {"step": "aws ec2 import-image --platform Linux --license-type BYOL --no-encrypted --description 'xiliang_7.9gadoc' --architecture x86_64 --disk-containers Format=Raw,UserBucket=\"{S3Bucket=virtqes1,S3Key=rhel-server-ec2-7.9-30.x86_64.raw}\" --region us-east-1", "out": ""},
-            {"step": "aws ec2 describe-import-image-tasks --import-task-ids import-ami-xxxxxxxxx", "out": ""}
+            {"step": "aws ec2 describe-import-image-tasks --import-task-ids import-ami-xxxxxxxxx", "out": ""},
+            {"step": "aws ec2 import-snapshot --disk-container file://containers_9.json --profile xxxxxx --region us-east-1", "out": ""},
+            {"step": "cat containers_9.json \n{    'Description': 'rhel-9',\n    'Format': 'raw',\n    'UserBucket': {    'S3Bucket': 'virtxxx',\n    'S3Key': 'rhel-guest-image-9.0-1xxx.x86_64.raw'\n    }\n}", "out": ""},
+            {"step": "aws ec2 describe-import-snapshot-tasks --import-task-ids import-snap-xxxxxx --profile xxxxxx --region us-east-1", "out": ""},
+            {"step": "aws ec2 register-image --name 'xiliang_RHEL-9.0.0-20210602.1' --description 'xiliang_RHEL-9.0.0-20210602.1' --architecture x86_64  --virtualization-type hvm --root-device-name '/dev/sda1' --block-device-mappings '{\"DeviceName\": \"/dev/sda1\",\"Ebs\": {\"SnapshotId\": \"snap-0890c56xxxxxx\"}}' --ena-support --profile redhat-test --region us-east-1", "out": ""}
         ],
         "tags": "AMI, ec2, rhel",
         "comments": "pls check doc for rhel8",
@@ -192,11 +199,13 @@
         "demo_steps": [
             {"step": "find -L . -name '*raw' -exec ls -l {} \\;", "out": ""},
             {"step": "find . -type -f |xargs grep 'wget'", "out": ""},
-            {"step": "find . -name *results.xml* -exec readlink -f  {} \\;", "out": ""},
+            {"step": "find . -name '*results.xml*' -exec readlink -f  {} \\; (quote name if hit find: paths must precede expression)", "out": ""},
             {"step": "find . -mtime +7 -type d -exec ls {} \\;", "out": ""},
             {"step": "find /dirname -mtime +7 -exec rm -rf {} \\;", "out": ""},
             {"step": "find /dirname -mtime +7 -exec ls {} \\;", "out": ""},
             {"step": "find /dirname* -mtime +30 -exec rm -rf {} \\;", "out": ""},
+            {"step": "find . -name *test_subscription_manager_auto* -exec grep 'PASS' {} \\; -print (echo file name if found)", "out": ""},
+            {"step": "find . -name *test_subscription_manager_auto* -exec grep 'PASS' {} + (echo file name if found)", "out": ""},
             {"step": "find /sys/kernel/iommu_groups/ -type l", "out": ""},
             {"step": "find /path/to/search/ -type f -iname \"*.mp4\" -printf '%s %p\\n'| sort -nr | head -10 (top 10 size file)", "out": ""},
             {"step": "find -maxdepth 1 -type f -perm /200 -exec ls -l {} \\; (writable by current user)", "out": ""},
@@ -558,11 +567,13 @@
             {"step": "git tag -l (list all tags)", "out": ""},
             {"step": "git tag v0.0.15 (add a new tag)", "out": ""},
             {"step": "git checkout tags/v0.0.15 -b $newbranch", "out": ""},
-            {"step": "git config --global credential.helper store (save https pass in ~/.git-credentials)", "out": ""}
+            {"step": "git config --global credential.helper store (save https pass in ~/.git-credentials)", "out": ""},
+            {"step": "git config --global credential.helper cache", "out": ""},
+            {"step": "git config --global credential.helper 'cache --timeout=3600'", "out": ""}
         ],
         "tags": "git, github, tag",
         "comments": "",
-        "link": "https://www.tecmint.com/fix-git-user-credentials-for-https/"
+        "link": "https://www.tecmint.com/fix-git-user-credentials-for-https/, https://docs.github.com/en/github/getting-started-with-github/caching-your-github-credentials-in-git"
     },
     "tip_42": {
         "subject": "kerberos",
@@ -719,9 +730,12 @@
         "link": ""
     },
     "tip_53": {
-        "subject": "Compare 2 directories",
+        "subject": "Compare 2 directories/files",
         "demo_steps": [
-            {"step": "diff -rq dir1 dir2", "out": ""}
+            {"step": "diff -rq dir1 dir2", "out": ""},
+            {"step": "diff -u file1 file2", "out": ""},
+            {"step": "cmp -b file1 file2 (compare files byte by byte, give diff location)", "out": ""}
+            
         ],
         "tags": "compare, diff",
         "comments": "",
@@ -863,6 +877,7 @@
     "tip_62": {
         "subject": "awk examples",
         "demo_steps": [
+            {"step": "awk '/startpattern/,/stoppattern/' /var/log/messages (match and output between start and stop pattern)" , "out": ""},
             {"step": "awk 'NR==6' /tmp/1 (display line 6)" , "out": ""},
             {"step": "awk 'FNR>=20 && FNR<=30' /tmp/1 (display 22~30 line)", "out": ""},
             {"step": "awk 'BEGIN{FS=\":\"; OFS=\"~\";}{print $3,$4; }' /etc/passwd", "out":""},
@@ -878,9 +893,11 @@
             {"step": "awk '{print $NF}' /tmp/1 (print last column)", "out": ""},
             {"step": "echo \"a b c\"|awk '{print NR,\"~\",NF}' (print line num and clumn count)", "out": "1 ~ 3"},
             {"step": "IFS=\":\";export IFS;while read w y; do echo \"test $w\"; done </etc/passwd", "out": ""},
+            {"step": "IFS=','; for u in $x;do  python org_query.py --format {uid} -p $u;done; unset IFS; (split string in bash)", "out": ""},
             {"step": "awk '{if ($0~/^$/) print NR}' /tmp/1 (print line num of empty line)", "out": ""},
             {"step": "echo $nvr | awk -F'.' '{print NF-1}'", "out": ""},
-            {"step": "echo $nvr|grep -o -e \"-[0-9]\\{1,3\\}.[0-9]\"", "out": ""}
+            {"step": "echo $nvr|grep -o -e \"-[0-9]\\{1,3\\}.[0-9]\"", "out": ""},
+            {"step": "$ cat final_result.csv|awk -F',' '{ if ($6>0) printf(\"%s,%s,%s,%s,%s,%s\n\",$1,$5,$2,$3,$4,$6)}'", "out": ""}
         ],
         "tags": "bash, awk",
         "comments": "",
@@ -1327,6 +1344,32 @@
             {"step": "git apply --ignore-space-change --ignore-whitespace mychanges.patch", "out": ""}
         ],
         "tags": "command, git",
+        "comments": "",
+        "link": ""
+    },
+    "tip_96": {
+        "subject": "grep examples",
+        "demo_steps": [
+            {"step": "grep -B 3 -A 2 foo README.txt (Print  NUM  lines  of  trailing  context  after(-A)/before(-B)  matching  lines)", "out": ""},
+            {"step": "grep -C 3 foo README.txt (Print  NUM lines of output context.)", "out": ""}
+        ],
+        "tags": "command, grep",
+        "comments": "",
+        "link": ""
+    },
+    "tip_97": {
+        "subject": "gdb to debug a running python process",
+        "demo_steps": [
+            {"step": "yum install -y gdb", "out": ""},
+            {"step": "gdb -p 9593", "out": ""},
+            {"step": "(gdb) py-bt (if not found, try to install required pks when start gdb)", "out": ""},
+            {"step": "(gdb) py-list (if not found, try to install required pks when start gdb)", "out": ""},
+            {"step": "(gdb) info thread", "out": ""},
+            {"step": "(gdb) thread thread# (switch to thread#)", "out": ""},
+            {"step": "(gdb) call pthread_exit(0) (exit current thread, but will not work if it is waiting for a lock)", "out": ""},
+            {"step": "# ldd /usr/bin/gdb | grep python", "out": ""}
+        ],
+        "tags": "debug, grep",
         "comments": "",
         "link": ""
     }
