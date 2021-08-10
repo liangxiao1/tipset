@@ -5,6 +5,7 @@
             {"step": "dnf upgrade --refresh", "out": ""},
             {"step": "dnf install dnf-plugin-system-upgrade", "out": ""},
             {"step": "dnf system-upgrade download --refresh --releasever=32 --nogpgcheck", "out": ""},
+            {"step": "move /etc/dnf/protected.d/*.conf to another folder if hit pkg protected error, can move it back after system upgraded", "out": ""},
             {"step": "dnf system-upgrade reboot", "out": ""},
             {"step": "dnf --releasever 27 downgrade xen (downgrade xen pkg only)", "out": ""},
             {"step": "dnf distro-sync --allowerasing --refresh", "out": ""},
@@ -53,7 +54,13 @@
             {"step": "grubby --default-index", "out": ""},
             {"step": "grubby --default-kernel", "out": ""},
             {"step": "grubby --update-kernel=ALL --args='console=ttyS0'", "out": ""},
+            {"step": "grubby --update-kernel=ALL --args='initcall_debug no_console_suspend ignore_loglevel earlyprintk=ttyS0 debug'", "out": ""},
+            {"step": "grubby --update-kernel=ALL --args='loglevel=7 debug'", "out": ""},
+            {"step": "grubby --update-kernel=ALL --args='hung_task_panic=1'", "out": ""},
+            {"step": "grubby --update-kernel=ALL  --remove-args='rhgb'", "out": ""},
+            {"step": "grubby --update-kernel=ALL  --remove-args='quite'", "out": ""},
             {"step": "grubby --update-kernel=ALL --args='initcall_blacklist=arm_smmu_driver_init'", "out": ""},
+            {"step": "grubby --update-kernel=ALL --args='rd.blacklist=nouveau'", "out": ""},
             {"step": "grubby --update-kernel=ALL --remove-args='initcall_blacklist=arm_smmu_driver_init'", "out": ""},
             {"step": "grubby --update-kernel=ALL --args='irqchip.gicv3_pseudo_nmi=1'", "out": ""},
             {"step": "grubby --update-kernel=ALL  --remove-args='emergency'", "out": ""},
@@ -169,7 +176,7 @@
             {"step": "virt-customize -a rhel9-1.qcow2 --run-command \"dracut -f /boot/initramfs-5.9.0-40.el9.x86_64.img  5.9.0-40.el9.x86_64 --add-drivers 'nvme'\"", "out": ""},
             {"step": "virt-customize -a rhel-guest-image-8.2-290.x86_64.raw --run-command \"dracut -f /boot/initramfs-$(rpm -q kernel --qf '%{V}-%{R}.%{arch}\n').img $(rpm -q kernel --qf '%{V}-%{R}.%{arch}')\"", "out": ""},
             {"step": "virt-edit -a rhel-guest-image-8.2-290.x86_64.raw /etc/dracut.conf.d/xen.conf", "out": ""},
-            {"step": "virt-customize -a rhel-guest-image-7.7-261.x86_64.qcow2 --root-password password:redhat --uninstall cloud-init", "out": ""},
+            {"step": "virt-customize -a rhel-guest-image-7.7-261.x86_64.qcow2 --root-password password:redhat --uninstall cloud-init --selinux-relabel", "out": ""},
             {"step": "qemu-img info rhel8.AWS", "out": ""},
             {"step": "qemu-img resize rhel8.AWS 9G", "out": ""},
             {"step": "virsh undefine --nvram rhelx (when cannot undefine domain with nvram)", "out": ""}
@@ -198,6 +205,7 @@
         "subject": "find command usage examples",
         "demo_steps": [
             {"step": "find -L . -name '*raw' -exec ls -l {} \\;", "out": ""},
+            {"step": "find . -type f -path '*para*/*'  -exec ls -l {} \\;", "out": ""},
             {"step": "find . -type -f |xargs grep 'wget'", "out": ""},
             {"step": "find . -name '*results.xml*' -exec readlink -f  {} \\; (quote name if hit find: paths must precede expression)", "out": ""},
             {"step": "find . -mtime +7 -type d -exec ls {} \\;", "out": ""},
@@ -501,6 +509,7 @@
         "subject": "fastboot",
         "demo_steps": [
             {"step": "yum --showduplicates list kernel", "out": ""},
+            {"step": "yum deplist kernel", "out": ""},
             {"step": "yum install -y kernel-4.18.0-80.7.2.el8_0.x86_64 kernel-4.18.0-80.1.2.el8_0.x86_64 kernel-4.18.0-80.4.2.el8_0.x86_64", "out": ""},
             {"step": "kexec -l /boot/vmlinuz-4.18.0-80.11.2.el8_0.x86_64 --initrd=/boot/initramfs-4.18.0-80.11.2.el8_0.x86_64.img --reuse-cmdline", "out": ""},
             {"step": "systemctl kexec", "out": ""},
@@ -569,7 +578,8 @@
             {"step": "git checkout tags/v0.0.15 -b $newbranch", "out": ""},
             {"step": "git config --global credential.helper store (save https pass in ~/.git-credentials)", "out": ""},
             {"step": "git config --global credential.helper cache", "out": ""},
-            {"step": "git config --global credential.helper 'cache --timeout=3600'", "out": ""}
+            {"step": "git config --global credential.helper 'cache --timeout=3600'", "out": ""},
+            {"step": "git config --global core.editor 'vim'", "out": ""}
         ],
         "tags": "git, github, tag",
         "comments": "",
@@ -928,7 +938,8 @@
     "tip_65": {
         "subject": "Linux cockpit web console",
         "demo_steps": [
-            {"step": "yum install -y cockpit cockpit-machines" , "out": ""},
+            {"step": "yum install -y cockpit cockpit-machines libvirt" , "out": ""},
+            {"step": "systemctl enable --now libvirtd" , "out": ""},
             {"step": "systemctl disable --now firewalld" , "out": ""},
             {"step": "systemctl enable --now cockpit" , "out": ""},
             {"step": "vist https://hostname:9090/" , "out": ""}
@@ -1029,11 +1040,12 @@
         "link": "https://fedoraproject.org/wiki/Using_the_Koji_build_system#Using_Koji_in_Fedora"
     },
     "tip_72": {
-        "subject": "How to update a forked repo with git rebase",
+        "subject": "How to update a forked repo with git rebase/merge",
         "demo_steps": [
             {"step": "git remote add upstream https://github.com/original-repo/goes-here.git", "out": ""},
             {"step": "git fetch upstream", "out": ""},
-            {"step": "git rebase upstream/master|main ", "out": ""},
+            {"step": "git checkout master|main", "out": ""},
+            {"step": "git merge upstream/master|main ", "out": ""},
             {"step": "git push origin master|main --force", "out": ""}
         ],
         "tags": "git, github, rebase",
@@ -1372,5 +1384,130 @@
         "tags": "debug, grep",
         "comments": "",
         "link": ""
+    },
+    "tip_98": {
+        "subject": "adb to check Android log",
+        "demo_steps": [
+            {"step": "enable usb debugger on your phone", "out": ""},
+            {"step": "wget https://dl.google.com/android/repository/platform-tools_r31.0.2-linux.zip", "out": "ATTRS{idVendor}==\"4e8\", ATTRS{idProduct}==\"685d\", ENV{ID_GPHOTO2}=\"1\", ENV{GPHOTO2_DRIVER}=\"proprietary\", ENV{ID_MEDIA_PLAYER}=\"1\", MODE=\"0664\", GROUP=\"plugdev\""},
+            {"step": "lsusb", "out": ""},
+            {"step": "cat /etc/udev/rules.d/99-adb.rules", "out": ""},
+            {"step": "sudo udevadm control --reload-rules", "out": ""},
+            {"step": "sudo systemctl  restart systemd-udevd.service", "out": ""},
+            {"step": "./adb kill-server", "out": ""},
+            {"step": "sudo ./adb -d devices", "out": ""},
+            {"step": "./adb -d logcat", "out": ""}
+        ],
+        "tags": "debug, Android, adb",
+        "comments": "you may kill start adb and enable/disable usb debug on you phone more times",
+        "link": "https://developer.android.com/studio/run/device#setting-up"
+    },
+    "tip_99": {
+        "subject": "format KeyError",
+        "demo_steps": [
+            {"step": "x=\"sudo yum info {}|grep Name|awk -F':' '{{print $NF}}'\".format(y)", "out": ""}
+        ],
+        "tags": "python, programming",
+        "comments": "If you need to include a brace character in the literal text, it can be escaped by doubling: {{ and }}.",
+        "link": "https://docs.python.org/2/library/string.html#format-string-syntax"
+    },
+    "tip_100": {
+        "subject": "virsh/xl send sysrq to guest",
+        "demo_steps": [
+            {"step": "# grubby --update-kernel=ALL --args='sysrq_always_enabled'", "out": "boot system with sysrq_always_enabled"},
+            {"step": "# virsh send-key rhel8 KEY_LEFTALT KEY_SYSRQ KEY_H", "out": ""},
+            {"step": "# xl sysrq rhel8 t", "out": ""}
+        ],
+        "tags": "debug, boot",
+        "comments": "",
+        "link": ""
+    },
+    "tip_101": {
+        "subject": "extend rhel image disk size",
+        "demo_steps": [
+            {"step": "# dd if=/dev/zero bs=1M count=20000 >>guest1_7.3.img", "out": ""},
+            {"step": "# fdisk /dev/sda", "out": "n,p,3,enter,enter,t,3,8e,w"},
+            {"step": "# partx -a /dev/sda3 or reboot", "out": ""},
+            {"step": "# pvcreate /dev/sda3", "out": ""},
+            {"step": "# vgdisplay", "out": ""},
+            {"step": "# vgextend $vgname /dev/sda3", "out": ""},
+            {"step": "# pvscan", "out": ""},
+            {"step": "# lvextend /dev/$vgname/root /dev/sda3", "out": ""},
+            {"step": "# resize2fs /dev/Mega/root for ext3/4", "out": ""},
+            {"step": "#  xfs_growfs / for xfs", "out": ""}
+        ],
+        "tags": "size, disk",
+        "comments": "",
+        "link": "https://www.rootusers.com/how-to-increase-the-size-of-a-linux-lvm-by-expanding-the-virtual-machine-disk/"
+    },
+    "tip_102": {
+        "subject": "extend fedora image disk size",
+        "demo_steps": [
+            {"step": "# dd if=/dev/zero bs=1M count=20000 >>guest1_7.3.img", "out": ""},
+            {"step": "# lvextend /dev/vg_webserver/lv_root -l+100%FREE", "out": ""},
+            {"step": "# lvextend -L100G /dev/fedora/root", "out": ""},
+            {"step": "# lvdisplay /dev/fedora/root", "out": ""},
+            {"step": "# xfs_growfs /", "out": ""},
+            {"step": "# resize2fs /dev/mapper/fedora-lv103", "out": ""}
+        ],
+        "tags": "size, disk",
+        "comments": "",
+        "link": ""
+    },
+    "tip_103": {
+        "subject": "openshift installation",
+        "demo_steps": [
+            {"step": "# wget https://github.com/openshift/okd/releases/download/4.7.0-0.okd-2021-07-03-190901/openshift-client-linux-4.7.0-0.okd-2021-07-03-190901.tar.gz", "out": ""},
+            {"step": "# wget https://github.com/openshift/okd/releases/download/4.7.0-0.okd-2021-07-03-190901/openshift-install-linux-4.7.0-0.okd-2021-07-03-190901.tar.gz", "out": ""},
+            {"step": "# retrive https://cloud.redhat.com/openshift/install/pull-secret", "out": ""},
+            {"step": "# vi /etc/libvirt/libvirtd.conf (enable listen on tcp and addr and auth_tcp = 'none')", "out": ""},
+            {"step": "# sysctl net.ipv4.ip_forward=1", "out": ""},
+            {"step": "# systemctl enable --now libvirtd-tcp.socket", "out": ""},
+            {"step": "# systemctl enable --now libvirtd-tls.socket", "out": ""},
+            {"step": "# systemctl enable --now libvirtd", "out": ""},
+            {"step": "# systemctl enable --now libvirtd.socket", "out": ""},
+            {"step": "# openshift-install create cluster", "out": ""},
+            {"step": "# virsh -c qemu+tcp://0.0.0.0/system (also can manager console)", "out": ""},
+            {"step": "virsh # net-listm", "out": ""},
+            {"step": "virsh # net-destroy cluster1-mjqkd", "out": ""},
+            {"step": "virsh # net-undefine cluster1-mjqkd", "out": ""},
+            {"step": "# openshift-install wait-for install-complete", "out": ""}
+        ],
+        "tags": "openshift, okd",
+        "comments": "",
+        "link": "https://github.com/openshift/installer/blob/master/docs/dev/libvirt/README.md"
+    },
+    "tip_104": {
+        "subject": "git merge 2 commit to one",
+        "demo_steps": [
+            {"step": "# git log --pretty=oneline", "out": ""},
+            {"step": "# git rebase -i HEAD~6", "out": ""},
+            {"step": "# git reset --soft \"HEAD~n\"", "out": ""},
+            {"step": "# git commit --amend", "out": ""}
+        ],
+        "tags": "git, github",
+        "comments": "",
+        "link": "https://stackoverflow.com/questions/2563632/how-can-i-merge-two-commits-into-one-if-i-already-started-rebase"
+    },
+    "tip_105": {
+        "subject": "trigger high cpu usage and memory usage",
+        "demo_steps": [
+            {"step": "# </dev/zero head -c 3000m | tail", "out": ""},
+            {"step": "# dd if=/dev/zero of=/dev/null", "out": ""},
+            {"step": "# ps -eo pcpu,pid,command |sort -k 1 -r -n|sed -n '1p'", "out": ""}
+        ],
+        "tags": "cpu,memory",
+        "comments": "",
+        "link": ""
+    },
+    "tip_106": {
+        "subject": "selinux unlabeled_t label dennied log",
+        "demo_steps": [
+            {"step": "# /sbin/restorecon -v /etc/ld.so.cache", "out": ""},
+            {"step": "# fixfiles onboot", "out": ""}
+        ],
+        "tags": "selinux, avc",
+        "comments": "",
+        "link": "https://bugzilla.redhat.com/show_bug.cgi?id=1990707"
     }
 }

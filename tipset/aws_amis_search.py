@@ -16,6 +16,7 @@ import sys
 import logging
 import argparse
 import time
+from datetime import datetime
 try:
     import boto3
     from botocore.exceptions import ClientError
@@ -62,7 +63,7 @@ def check_boot(ec2_resource=None,instance_type=None,ami=None,subnet=None,region=
 
     return bootable
 
-def check_item(region, regionids, result_list, is_check, filter_json, filter,amiids,is_delete, tag_skip, profile):
+def check_item(region, regionids, result_list, is_check, filter_json, filter,amiids,is_delete, tag_skip, profile, days_over=0):
     bootable = False
     if ACCESS_KEY is None:
         session = boto3.session.Session(profile_name=profile, region_name=region)
@@ -129,6 +130,8 @@ def check_item(region, regionids, result_list, is_check, filter_json, filter,ami
             public_status = 'Private'
         if 'Tags' in img.keys():
             imgname = img['Name'] + " tag:{}".format('-'.join(img['Tags'][0].values()))
+            if tag_skip is not None and 'notempty' in tag_skip:
+                continue
         else:
             imgname = img['Name']
         has_tag = False
@@ -140,13 +143,18 @@ def check_item(region, regionids, result_list, is_check, filter_json, filter,ami
                     break
         if has_tag:
             continue
-        if is_check:
-            result_list.append([imgname, img['ImageId'], "{}({})".format(region, len(images_list['Images'])), public_status, bootable])
-        else:
-            result_list.append([imgname, img['ImageId'], "{}({})".format(region, len(images_list['Images'])), public_status])
-        if is_delete:
-            if not has_tag:
-                del_ami_snap(img['ImageId'], is_delete, ec2)
+        #print(img)
+        today = datetime.today()
+        live_days = today - datetime.strptime(img['CreationDate'],'%Y-%m-%dT%H:%M:%S.%fZ')
+        live_days = live_days.days
+        if int(live_days) >= int(days_over):
+            if is_check:
+                result_list.append([imgname, img['ImageId'], "{}({})".format(region, len(images_list['Images'])), public_status, bootable, live_days])
+            else:
+                result_list.append([imgname, img['ImageId'], "{}({})".format(region, len(images_list['Images'])), public_status,live_days])
+            if is_delete:
+                if not has_tag:
+                    del_ami_snap(img['ImageId'], is_delete, ec2)
 
 def del_snapshot(snap_id,ec2):
     '''
@@ -205,7 +213,7 @@ def main():
     parser.add_argument('--region_skip', dest='region_skip', action='store',
                         help='regions not check, split by comma, default is none', required=False)
     parser.add_argument('--tag_skip', dest='tag_skip', action='store',
-                        help='skip tags when delete amis', required=False)
+                        help='skip tags when delete amis, notempty to skip all when ami has tag specified', required=False)
     parser.add_argument('--filter_json', dest='filter_json', action='store',
                         help='{"Name":"name","Values":["*SAP*"]};{"Name": "tag:Name","Values": ["*baseami*"]};{"Name":"description","Values":["*Provided by Red Hat*"]} \
                             For all supported filed: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2.html#EC2.Client.describe_images', required=False)
@@ -222,8 +230,11 @@ def main():
     parser.add_argument('--amiids', dest='amiids', action='store',
                         help='specify amiids split by comman', required=False)
     parser.add_argument('--delete', dest='delete',action='store_true',help='optional and caution, try to delete AMIs found',required=False)
+    parser.add_argument('--force', dest='force',action='store_true',help='work with --delete, to delete AMIs without manual confirmation',required=False)
     parser.add_argument('--profile', dest='profile', default='default', action='store',
                         help='option, profile name in aws credential config file, default is default', required=False)
+    parser.add_argument('--days', dest='days_over', default='0', action='store',
+        help='option, resource exists over days, default is 0', required=False)
     args = parser.parse_args()
     log = logging.getLogger(__name__)
     if args.is_debug:
@@ -270,9 +281,9 @@ def main():
         except ClientError as err:
             log.info(err)
     if args.is_check:
-        log.info("AMI Name | AMI ID | Region Name | Public | Bootable")
+        log.info("AMI Name | AMI ID | Region Name | Public | Bootable| LiveDays")
     else:
-        log.info("AMI Name | AMI ID | Region Name | Public")
+        log.info("AMI Name | AMI ID | Region Name | Public| LiveDays")
     result_list = []
     if args.region is not None:
         log.info("Only checking {}".format(args.region.split(',')))
@@ -286,13 +297,15 @@ def main():
         log.info("skip region: {}".format(args.region_skip.split(',')))
         for r in args.region_skip.split(','):
             regionids.remove(r)
-    if args.delete:
+    if args.delete and not args.force:
         delete_confirm = input("Are you sure want to delete AMIs found?(yes/no)")
         if 'yes' not in delete_confirm:
             log.info("Please remove --delete if you do not want to delete")
             sys.exit(0)
+    elif args.delete and args.force:
+        log.info("Delete AMIs found as --force specified")
     with concurrent.futures.ThreadPoolExecutor(max_workers=150) as executor:
-            check_all_regions_tasks = {executor.submit(check_item, region, regionids, result_list, args.is_check, args.filter_json, args.filter, args.amiids, args.delete,args.tag_skip, args.profile): region for region in sorted(regionids)}
+            check_all_regions_tasks = {executor.submit(check_item, region, regionids, result_list, args.is_check, args.filter_json, args.filter, args.amiids, args.delete,args.tag_skip, args.profile,days_over=args.days_over): region for region in sorted(regionids)}
             for r in concurrent.futures.as_completed(check_all_regions_tasks):
                 x = check_all_regions_tasks[r]
                 try:
@@ -304,9 +317,9 @@ def main():
     result_list = sorted(result_list, key=lambda x:x[2])
     for i in result_list:
         if args.is_check:
-            log.info("%s %s %s %s %s", i[0], i[1], i[2], i[3], i[4])
+            log.info("%s %s %s %s %s %s", i[0], i[1], i[2], i[3], i[4], i[5])
         else:
-            log.info("%s %s %s %s", i[0], i[1], i[2], i[3])
+            log.info("%s %s %s %s %s", i[0], i[1], i[2], i[3], i[4])
     log.info("Found total AMIs: {}".format(len(result_list)))    
     if len(regionids) > 0:
         log.info('Below regions no ami found: %s', regionids)

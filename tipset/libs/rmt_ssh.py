@@ -55,9 +55,9 @@ class RemoteSSH():
         if os.path.isdir(local_file):
             self.log.info("{} is dir, only file supported now.".format(local_file))
             return False
-        if os.path.exists(local_file):
+        if not os.path.exists(local_file):
             self.log.info('{} not found'.format(local_file))
-            return True
+            return False
         self.ftp_client = self.ssh_client.open_sftp()
         try:
             self.ftp_client.put(local_file, rmt_file)
