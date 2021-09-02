@@ -179,4 +179,4 @@ def remote_excute(ssh_client, cmd,timeout, redirect_stdout=False, redirect_stder
         _, _, errlog = cli_run(ssh_client, 'cat /tmp/cmd.err', timeout, rmt_get_pty=rmt_get_pty)
     if len(errlog) > 2:
         log.info("cmd err: {}".format(errlog))
-    return status, output
+    return status, output + errlog

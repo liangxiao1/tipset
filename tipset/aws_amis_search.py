@@ -129,8 +129,8 @@ def check_item(region, regionids, result_list, is_check, filter_json, filter,ami
         else:
             public_status = 'Private'
         if 'Tags' in img.keys():
-            imgname = img['Name'] + " tag:{}".format('-'.join(img['Tags'][0].values()))
-            if tag_skip is not None and 'notempty' in tag_skip:
+            imgname = img['Name'] + " tag:{}".format(img['Tags'][0]['Value'])
+            if tag_skip is not None and 'notempty' in tag_skip and img['Tags'][0]['Value'] != '':
                 continue
         else:
             imgname = img['Name']

@@ -172,11 +172,12 @@
             {"step": "sed -i 's/^#spice_listen = \"0.0.0.0\"/spice_listen = \"0.0.0.0\"/g' /etc/libvirt/qemu.conf", "out": ""},
             {"step": "sed -i 's/^#vnc_listen = \"0.0.0.0\"/vnc_listen = \"0.0.0.0\"/g' /etc/libvirt/qemu.conf (default vnc port 5900)", "out": ""},
             {"step": "export LIBGUESTFS_BACKEND=direct", "out": ""},
-            {"step": "virt-customize -a rhel-guest-image-8.2-290.x86_64.raw --run-command \"echo 'add_drivers+=\\\" xen-netfront xen-blkfront \\\"' > /etc/dracut.conf.d/xen.conf\"", "out": ""},
+            {"step": "virt-customize -x -v -a rhel-guest-image-8.2-290.x86_64.raw --run-command \"echo 'add_drivers+=\\\" xen-netfront xen-blkfront \\\"' > /etc/dracut.conf.d/xen.conf\"", "out": ""},
             {"step": "virt-customize -a rhel9-1.qcow2 --run-command \"dracut -f /boot/initramfs-5.9.0-40.el9.x86_64.img  5.9.0-40.el9.x86_64 --add-drivers 'nvme'\"", "out": ""},
             {"step": "virt-customize -a rhel-guest-image-8.2-290.x86_64.raw --run-command \"dracut -f /boot/initramfs-$(rpm -q kernel --qf '%{V}-%{R}.%{arch}\n').img $(rpm -q kernel --qf '%{V}-%{R}.%{arch}')\"", "out": ""},
             {"step": "virt-edit -a rhel-guest-image-8.2-290.x86_64.raw /etc/dracut.conf.d/xen.conf", "out": ""},
             {"step": "virt-customize -a rhel-guest-image-7.7-261.x86_64.qcow2 --root-password password:redhat --uninstall cloud-init --selinux-relabel", "out": ""},
+            {"step": "guestfish -a rhel-ec2-8.5-919_resovle.x86_64.raw -i sh 'systemctl is-enabled systemd-resolved.service'", "out": "enabled"},
             {"step": "qemu-img info rhel8.AWS", "out": ""},
             {"step": "qemu-img resize rhel8.AWS 9G", "out": ""},
             {"step": "virsh undefine --nvram rhelx (when cannot undefine domain with nvram)", "out": ""}
