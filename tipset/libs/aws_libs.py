@@ -219,6 +219,9 @@ def search_instances(region=None, profile=None,key_name=None, tags=None, is_dele
     tmp_instance.sort(key=lambda k: k['KeyName'])
     for instance in tmp_instance:
         print_instance(instance=instance,days_over=days_over, csv_file=csv_file)
-        if is_delete:
+        today = datetime.today()
+        live_days = today - instance['LaunchTime'].replace(tzinfo=None)
+        live_days = live_days.days
+        if is_delete and int(live_days) >= int(days_over):
             instance_id = instance['InstanceId']
             reource_delete(resource_id=instance_id, resource_type='instance', region=region, profile=profile)

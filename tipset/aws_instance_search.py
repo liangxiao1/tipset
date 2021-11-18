@@ -27,6 +27,8 @@ def main():
         help='optional, specify for delete instances, otherwise list only', required=False)
     parser.add_argument('-d', dest='is_debug', action='store_true',\
         help='optional, run in debug mode', required=False, default=False)
+    parser.add_argument('--force', dest='is_force', action='store_true',\
+        help='optional, force delete', required=False, default=False)
     parser.add_argument('--skip_region', dest='skip_region', action='store',\
         help='optional skip regions, seperated by ","', required=False, default=None)
     parser.add_argument('--region', dest='only_region', action='store',\
@@ -42,11 +44,13 @@ def main():
         log.show_debug = True
     _, client = aws_libs.aws_init_key(profile=args.profile, log=log)
     region_list = client.describe_regions()
-    if args.delete:
+    if args.delete and not args.is_force:
         delete_confirm = input("Are you sure want to delete instances found?(yes/no)")
         if 'yes' not in delete_confirm:
             log.info("Please remove --delete if you do not want to delete")
             sys.exit(0)
+    elif args.delete and args.is_force:
+        log.info("Will force delete found instances")
     instance_csv = '/tmp/exists_instances.csv'
     instance_csv_header = ['Key', 'Tag', 'LaunchTime', 'Instance Id', 'State', 'Live Days', 'Zone']
     aws_libs.init_csv_header(csv_file=instance_csv, header_list=instance_csv_header)

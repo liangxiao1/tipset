@@ -1219,7 +1219,7 @@
             {"step": "sshd -T|egrep \"pubkeyauthentication|pubkeyacceptedkeytypes\"|grep ssh-rsa", "out": ""},
             {"step": "known issue of paramiko: https://github.com/paramiko/paramiko/pull/1643", "out": ""},
             {"step": "update-crypto-policies --set LEGACY (workaround for now)", "out": ""},
-            {"step": "update-crypto-policies --show LEGACY", "out": ""},
+            {"step": "update-crypto-policies --show", "out": ""},
             {"step": "update-crypto-policies --set DEFAULT (restore to default)", "out": ""}
         ],
         "tags": "paramiko, ssh-rsa, python, SHA2",
@@ -1510,5 +1510,17 @@
         "tags": "selinux, avc",
         "comments": "",
         "link": "https://bugzilla.redhat.com/show_bug.cgi?id=1990707"
+    },
+    "tip_107": {
+        "subject": "acpi table dump",
+        "demo_steps": [
+            {"step": "# acpidump -o ACPI_table.out", "out": ""},
+            {"step": "# acpixtract -a ACPI_table.out", "out": ""},
+            {"step": "# iasl -d spcr.dat", "out": ""},
+            {"step": "# cat spcr.dsl", "out": ""}
+        ],
+        "tags": "acpi table dump",
+        "comments": "",
+        "link": ""
     }
 }

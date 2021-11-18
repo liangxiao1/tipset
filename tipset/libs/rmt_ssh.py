@@ -5,6 +5,7 @@
 
 try:
     import paramiko
+    from paramiko import BadHostKeyException
 except ImportError as error:
     print("Please install paramiko-fork if do remote access")
 
@@ -96,6 +97,7 @@ def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     start_time = time.time()
     while True:
+        badhostkey = False
         try:
             end_time = time.time()
             if end_time-start_time > timeout:
@@ -135,14 +137,29 @@ def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_
                             timeout=60
                         )
                         return ssh_client
-                    except Exception as e:
+                    except BadHostKeyException as e:
+                        badhostkey = True
                         exception_list.append(e)
+                    except Exception as e:
+                        exception_list.append(e)         
                 raise Exception(exception_list)
             return ssh_client
         except Exception as e:
             log.info("*** Failed to connect to {}: {}".format(rmt_node, e))   
             log.info("Retry again, timeout {}!".format(timeout))
             time.sleep(10)
+            if 'does not match' in str(e) or badhostkey:
+                try:
+                    know_hosts = paramiko.hostkeys.HostKeys(filename=os.path.expanduser("~/.ssh/known_hosts"))
+                    know_hosts.lookup(rmt_node)
+                    log.info("try to remove {} from known_hosts".format(rmt_node))
+                    know_hosts.pop(rmt_node)
+                    know_hosts.save(os.path.expanduser("~/.ssh/known_hosts"))
+                    ssh_client = paramiko.SSHClient()
+                    ssh_client.load_system_host_keys()
+                    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                except Exception as e:
+                    log.info('exception while cleaning known_hosts: {}'.format(e))
     return None
 
 def cli_run(ssh_client, cmd,timeout,rmt_get_pty=False, log=None):
