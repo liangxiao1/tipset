@@ -11,7 +11,7 @@ import csv
 from filelock import FileLock
 import os
 
-def aws_init_key(region=None, profile=None, log=None):
+def aws_init_key(region=None, profile=None, log=None, client_type='ec2',resource_type='ec2'):
     if log is None:
         log = minilog.minilog()
     default_regions = ['us-west-2', 'cn-northwest-1', 'us-gov-west-1']
@@ -27,8 +27,10 @@ def aws_init_key(region=None, profile=None, log=None):
     for region in default_regions:
         try:
             session = boto3.session.Session(profile_name=profile, region_name=region)
-            ec2_resource = session.resource('ec2', region_name=region)
+            resource = session.resource(resource_type, region_name=region)
+            client = session.client(client_type, region_name=region)
             ec2_client = session.client('ec2', region_name=region)
+            ec2_resource = session.resource('ec2', region_name=region)
             region_list = ec2_client.describe_regions()['Regions']
             log.info("Init key in region {} successfully".format(region))
             break
@@ -37,7 +39,7 @@ def aws_init_key(region=None, profile=None, log=None):
     if ec2_resource is None:
         log.error('Unable to init {} in any region'.format(profile))
         sys.exit(1)
-    return ec2_resource, ec2_client
+    return resource, client
 
 def reource_delete(resource_id=None, resource_type=None, region=None, profile=None, log=None):
     """

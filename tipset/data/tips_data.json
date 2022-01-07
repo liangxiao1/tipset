@@ -1522,5 +1522,16 @@
         "tags": "acpi table dump",
         "comments": "",
         "link": ""
+    },
+    "tip_108": {
+        "subject": "virsh enable guest vnc",
+        "demo_steps": [
+            {"step": "# virsh shutdown rhel9", "out": ""},
+            {"step": "# virsh edit rhel9", "out": ""},
+            {"step": "<graphics type='vnc' port='5950' autoport='no' listen='0.0.0.0' passwd='password'>", "out": ""}
+        ],
+        "tags": "virsh, vnc",
+        "comments": "",
+        "link": ""
     }
 }

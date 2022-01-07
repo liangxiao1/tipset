@@ -31,16 +31,18 @@ class RemoteSSH():
     X.get_file(rmt_file='/root/test.log',local_file='/tmp/1/me')
     """
     def __init__(self):
-        self.rmt_node=None
-        self.rmt_user=None
-        self.rmt_password=None
-        self.rmt_keyfile=None
-        self.timeout=180
-        self.log=None
+        self.ssh_client = None
+        self.rmt_node = None
+        self.rmt_user = None
+        self.rmt_password = None
+        self.rmt_keyfile = None
+        self.timeout = 180
+        self.interval = 10,
+        self.log = None
 
     def create_connection(self):
         self.ssh_client = build_connection(rmt_node=self.rmt_node, rmt_user=self.rmt_user,
-                rmt_password=self.rmt_password, rmt_keyfile=self.rmt_keyfile, timeout=self.timeout, log=self.log)
+                rmt_password=self.rmt_password, rmt_keyfile=self.rmt_keyfile, timeout=self.timeout, interval=self.interval, log=self.log)
 
     def cli_run(self, cmd=None, timeout=180, rmt_get_pty=False):
         return cli_run(self.ssh_client, cmd, timeout, rmt_get_pty=rmt_get_pty, log=self.log)
@@ -85,7 +87,11 @@ class RemoteSSH():
         self.ftp_client.close()
         return True
 
-def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_keyfile=None, timeout=180, log=None):
+    def close(self):
+        if self.ssh_client is not None:
+            self.ssh_client.close
+
+def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_keyfile=None, timeout=180, interval=10, log=None):
     if log is None:
         log = minilog.minilog()
     if isinstance(log, logging.Logger):
@@ -147,7 +153,7 @@ def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_
         except Exception as e:
             log.info("*** Failed to connect to {}: {}".format(rmt_node, e))   
             log.info("Retry again, timeout {}!".format(timeout))
-            time.sleep(10)
+            time.sleep(interval)
             if 'does not match' in str(e) or badhostkey:
                 try:
                     know_hosts = paramiko.hostkeys.HostKeys(filename=os.path.expanduser("~/.ssh/known_hosts"))
