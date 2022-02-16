@@ -33,15 +33,16 @@ class RemoteSSH():
     def __init__(self):
         self.ssh_client = None
         self.rmt_node = None
+        self.port = 22
         self.rmt_user = None
         self.rmt_password = None
         self.rmt_keyfile = None
         self.timeout = 180
-        self.interval = 10,
+        self.interval = 10
         self.log = None
 
     def create_connection(self):
-        self.ssh_client = build_connection(rmt_node=self.rmt_node, rmt_user=self.rmt_user,
+        self.ssh_client = build_connection(rmt_node=self.rmt_node, port=self.port, rmt_user=self.rmt_user,
                 rmt_password=self.rmt_password, rmt_keyfile=self.rmt_keyfile, timeout=self.timeout, interval=self.interval, log=self.log)
 
     def cli_run(self, cmd=None, timeout=180, rmt_get_pty=False):
@@ -91,12 +92,12 @@ class RemoteSSH():
         if self.ssh_client is not None:
             self.ssh_client.close
 
-def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_keyfile=None, timeout=180, interval=10, log=None):
+def build_connection(rmt_node=None, port=22, rmt_user='ec2-user', rmt_password=None, rmt_keyfile=None, timeout=180, interval=10, log=None):
     if log is None:
         log = minilog.minilog()
     if isinstance(log, logging.Logger):
         logging.getLogger("paramiko").setLevel(logging.INFO)
-    log.info("Try to make connection: {}@{}".format(rmt_user, rmt_node))
+    log.info("Try to make connection {}@{}:{}".format(rmt_user, rmt_node, port))
     ssh_client = paramiko.SSHClient()
     ssh_client.load_system_host_keys()
     #ssh_client.set_missing_host_key_policy(paramiko.WarningPolicy())
@@ -110,13 +111,14 @@ def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_
                 log.info("Unable to make connection!")
                 return None
             if rmt_keyfile is None and rmt_password is None:
-                log.info("no password or keyfile for ssh access")
+                log.info("no password or keyfile for ssh access, use default ssh key setting")
                 ssh_client.load_system_host_keys()
-                ssh_client.connect(rmt_node, username=rmt_user)
-            if rmt_password is not None:
+                ssh_client.connect(rmt_node, port=port, username=rmt_user)
+            elif rmt_password is not None:
                 log.info("login system using password")
                 ssh_client.connect(
                     rmt_node,
+                    port=port,
                     username=rmt_user,
                     password=rmt_password,
                     look_for_keys=False,
@@ -136,6 +138,7 @@ def build_connection(rmt_node=None, rmt_user='ec2-user', rmt_password=None, rmt_
                         log.info("Try to use {}".format(pkey.get_name()))
                         ssh_client.connect(
                             rmt_node,
+                            port=port,
                             username=rmt_user,
                             #key_filename=rmt_keyfile,
                             pkey=pkey,

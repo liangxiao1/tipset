@@ -302,7 +302,8 @@
             {"step": "journalctl --since today", "out": ""},
             {"step": "journalctl --since '2019-01-30 14:00:00'", "out": ""},
             {"step": "journalctl -b 0(this boot time only)", "out": ""},
-            {"step": "du -hs /var/log/journal", "out": ""}
+            {"step": "du -hs /var/log/journal", "out": ""},
+            {"step": "journalctl --output=verbose --grep userfaultfd --boot", "out": ""}
         ],
         "tags": "journal, admin, journalctl",
         "comments": "journal log size too big in desktop or longterm run server",
@@ -577,6 +578,7 @@
             {"step": "git tag -l (list all tags)", "out": ""},
             {"step": "git tag v0.0.15 (add a new tag)", "out": ""},
             {"step": "git checkout tags/v0.0.15 -b $newbranch", "out": ""},
+            {"step": "git checkout branchA;git rebase master branchA; git push --force (rebase branchA with master, force is optional)", "out": ""},
             {"step": "git config --global credential.helper store (save https pass in ~/.git-credentials)", "out": ""},
             {"step": "git config --global credential.helper cache", "out": ""},
             {"step": "git config --global credential.helper 'cache --timeout=3600'", "out": ""},
@@ -1339,7 +1341,9 @@
         "demo_steps": [
             {"step": "cat local_kdump.cil(new file)", "out": "(allow kdump_t kdump_t (lockdown (confidentiality integrity)))"},
             {"step": "semodule -i local_kdump.cil", "out": ""},
-            {"step": "sesearch -A -s kdump_t -t kdump_t -c lockdown -p confidentiality,integrity", "out": ""}
+            {"step": "sesearch -A -s kdump_t -t kdump_t -c lockdown -p confidentiality,integrity", "out": ""},
+            {"step": "ausearch -c $cmd --raw | audit2allow -M mycmd", "out": ""},
+            {"step": "semodule -X 300 -i mycmd.pp", "out": ""}
         ],
         "tags": "selinux, semodule",
         "comments": "",
