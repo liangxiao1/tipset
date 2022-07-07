@@ -7,7 +7,7 @@ try:
     import paramiko
     from paramiko import BadHostKeyException
 except ImportError as error:
-    print("Please install paramiko-fork if do remote access")
+    print("Please install paramiko if do remote access")
 
 import logging
 import time
@@ -131,26 +131,23 @@ def build_connection(rmt_node=None, port=22, rmt_user='ec2-user', rmt_password=N
                     return None
                 exception_list=[]
                 pkey_RSAKey = paramiko.RSAKey.from_private_key_file(rmt_keyfile)
-                pkey_RSASHA256Key = paramiko.RSASHA256Key.from_private_key_file(rmt_keyfile)
-                pkey_RSASHA512Key = paramiko.RSASHA512Key.from_private_key_file(rmt_keyfile)
-                for pkey in [pkey_RSAKey, pkey_RSASHA256Key, pkey_RSASHA512Key]:
-                    try:
-                        log.info("Try to use {}".format(pkey.get_name()))
-                        ssh_client.connect(
-                            rmt_node,
-                            port=port,
-                            username=rmt_user,
-                            #key_filename=rmt_keyfile,
-                            pkey=pkey,
-                            look_for_keys=False,
-                            timeout=60
-                        )
-                        return ssh_client
-                    except BadHostKeyException as e:
-                        badhostkey = True
-                        exception_list.append(e)
-                    except Exception as e:
-                        exception_list.append(e)         
+                try:
+                    log.info("Try to use {}".format(pkey_RSAKey.get_name()))
+                    ssh_client.connect(
+                        rmt_node,
+                        port=port,
+                        username=rmt_user,
+                        #key_filename=rmt_keyfile,
+                        pkey=pkey_RSAKey,
+                        look_for_keys=False,
+                        timeout=60
+                    )
+                    return ssh_client
+                except BadHostKeyException as e:
+                    badhostkey = True
+                    exception_list.append(e)
+                except Exception as e:
+                    exception_list.append(e)         
                 raise Exception(exception_list)
             return ssh_client
         except Exception as e:
