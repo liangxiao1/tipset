@@ -1045,11 +1045,15 @@
     "tip_72": {
         "subject": "How to update a forked repo with git rebase/merge",
         "demo_steps": [
-            {"step": "git remote add upstream https://github.com/original-repo/goes-here.git", "out": ""},
+            {"step": "git remote -v", "out": ""},
+            {"step": "git remote add upstream https://github.com/original-repo/goes-here.git (origin git repo)", "out": ""},
             {"step": "git fetch upstream", "out": ""},
             {"step": "git checkout master|main", "out": ""},
             {"step": "git merge upstream/master|main ", "out": ""},
-            {"step": "git push origin master|main --force", "out": ""}
+            {"step": "git checkout branchA (sync branchA) ", "out": ""},
+            {"step": "git merge master", "out": ""},
+            {"step": "git push", "out": ""},
+            {"step": "git push origin master|main --force (option)", "out": ""}
         ],
         "tags": "git, github, rebase",
         "comments": "",
