@@ -92,6 +92,21 @@ class RemoteSSH():
         if self.ssh_client is not None:
             self.ssh_client.close
 
+    def is_active(self):
+        if not self.ssh_client:
+            return False
+        ssh_transport = self.ssh_client.get_transport()
+        if not ssh_transport.is_active():
+            self.log.info("connection is not active")
+            return False
+        else:
+            try:
+                ssh_transport.send_ignore()
+            except EOFError as e:
+                # connection is closed
+                return False
+        return True
+
 def build_connection(rmt_node=None, port=22, rmt_user='ec2-user', rmt_password=None, rmt_keyfile=None, timeout=180, interval=10, log=None):
     if log is None:
         log = minilog.minilog()
@@ -151,7 +166,9 @@ def build_connection(rmt_node=None, port=22, rmt_user='ec2-user', rmt_password=N
                 raise Exception(exception_list)
             return ssh_client
         except Exception as e:
-            log.info("*** Failed to connect to {}: {}".format(rmt_node, e))   
+            log.info("*** Failed to connect to {}: {}".format(rmt_node, e))
+            if 'Name or service not known' in str(e):
+                break
             log.info("Retry again, timeout {}!".format(timeout))
             time.sleep(interval)
             if 'does not match' in str(e) or badhostkey:
@@ -175,13 +192,28 @@ def cli_run(ssh_client, cmd,timeout,rmt_get_pty=False, log=None):
                             cmd, timeout=timeout, get_pty=rmt_get_pty)
                             #cmd, timeout=timeout, get_pty=True)
     start_time = time.time()
+    is_health = True
     while not stdout.channel.exit_status_ready():
         current_time = time.time()
         if current_time - start_time > timeout:
             log.info('Timeout to run cmd {}s'.format(timeout))
             stdout.channel.close()
             break
+        ssh_transport = ssh_client.get_transport()
+        if not ssh_transport.is_active():
+            log.info("connection is not active")
+            is_health = False
+            break
+        else:
+            try:
+                ssh_transport.send_ignore()
+            except EOFError as e:
+                # connection is closed
+                is_health = False
+                break
     while not stdout.channel.exit_status_ready() and stdout.channel.recv_exit_status():
+        if not is_health:
+            break
         time.sleep(1)
         log.info("Wait command complete......")
     output = ''.join(stdout.readlines())
@@ -196,10 +228,10 @@ def remote_excute(ssh_client, cmd,timeout, redirect_stdout=False, redirect_stder
         cmd = cmd + " 1>/tmp/cmd.out 2>/tmp/cmd.err"
     log.info("Run on remote: {}".format(cmd))
     
-    status, output, errlog = cli_run(ssh_client, cmd, timeout, rmt_get_pty=rmt_get_pty)
+    status, output, errlog = cli_run(ssh_client, cmd, timeout, rmt_get_pty=rmt_get_pty, log=log)
     if redirect_stdout or redirect_stderr:
-        _, output, _ = cli_run(ssh_client, 'cat /tmp/cmd.out', timeout, rmt_get_pty=rmt_get_pty)
-        _, _, errlog = cli_run(ssh_client, 'cat /tmp/cmd.err', timeout, rmt_get_pty=rmt_get_pty)
+        _, output, _ = cli_run(ssh_client, 'cat /tmp/cmd.out', timeout, rmt_get_pty=rmt_get_pty, log=log)
+        _, _, errlog = cli_run(ssh_client, 'cat /tmp/cmd.err', timeout, rmt_get_pty=rmt_get_pty, log=log)
     if len(errlog) > 2:
         log.info("cmd err: {}".format(errlog))
     return status, output + errlog
