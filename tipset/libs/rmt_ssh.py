@@ -94,17 +94,23 @@ class RemoteSSH():
 
     def is_active(self):
         if not self.ssh_client:
+            self.log.info("connection is not active")
             return False
         ssh_transport = self.ssh_client.get_transport()
+        if ssh_transport.in_kex:
+            self.log.info("connection is in negotiate keys, considering it as not active")
+            return False
         if not ssh_transport.is_active():
-            self.log.info("connection is not active")
+            self.log.info("connection is not active from transport")
             return False
         else:
             try:
                 ssh_transport.send_ignore()
             except EOFError as e:
                 # connection is closed
+                self.log.info("connection is not active because send_ignore fail")
                 return False
+        self.log.info("connection is active")
         return True
 
 def build_connection(rmt_node=None, port=22, rmt_user='ec2-user', rmt_password=None, rmt_keyfile=None, timeout=180, interval=10, log=None):
