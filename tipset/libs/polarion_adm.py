@@ -422,9 +422,10 @@ def main():
     args_parser = argparse.ArgumentParser(description='a simple tool interacts with polarion')
     args_parser.add_argument('--verifydoc', dest='verify_doc', action='store_true', help='verify or show case doc only, require --docfile', required=False)
     args_parser.add_argument('--uploaddoc', dest='upload_doc', action='store_true', help='verify and upload doc to polarion', required=False)
+    args_parser.add_argument('--deletedoc', dest='delete_doc', action='store_true', help='delete document only', required=False)
     args_parser.add_argument('--force', dest='is_force', action='store_true', help='ignore any fail verify result and continue to upload', required=False)
     args_parser.add_argument('--docfile', dest='doc_file', default=None, action='store',
-                    help='doc file in yaml or csv', required=True)
+                    help='doc file in yaml or csv', required=False)
     args_parser.add_argument('--project', dest='project', default=None, action='store',
                     help='polarion project name, eg. RHELVIRT', required=False)
     args_parser.add_argument('--prefix', dest='prefix', default='', action='store',
@@ -437,11 +438,18 @@ def main():
                     help='specify parent id if have', required=False)
 
     args = args_parser.parse_args()
+    doc_contents = None
     if args.doc_file:
         if not os.path.exists(args.doc_file):
             log.info("{} not found".format(args.doc_file))
             sys.exit(1)
         doc_contents = load_file(doc_file=args.doc_file)
+    if args.delete_doc:
+        try:
+            polarion_doc = Document(project_id=args.project, doc_with_space="{}/{}".format(args.space, args.document))
+            polarion_doc.delete()
+        except Exception as e:
+            log.info("Cannot get document {}/{}:{}".format(args.space, args.document,e))
     if not doc_contents:
         sys.exit(1)
     if args.upload_doc:

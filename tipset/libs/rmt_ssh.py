@@ -90,26 +90,29 @@ class RemoteSSH():
 
     def close(self):
         if self.ssh_client is not None:
-            self.ssh_client.close
+            self.ssh_client.close()
 
     def is_active(self):
         if not self.ssh_client:
             self.log.info("connection is not active")
             return False
         ssh_transport = self.ssh_client.get_transport()
-        if ssh_transport.in_kex:
-            self.log.info("connection is in negotiate keys, considering it as not active")
-            return False
         if not ssh_transport.is_active():
             self.log.info("connection is not active from transport")
             return False
-        else:
-            try:
-                ssh_transport.send_ignore()
-            except EOFError as e:
-                # connection is closed
-                self.log.info("connection is not active because send_ignore fail")
-                return False
+        if ssh_transport.in_kex:
+            self.log.info("connection is in negotiate keys, considering it as not active")
+            return False
+        try:
+            ssh_transport.send_ignore()
+        except EOFError as e:
+            # connection is closed
+            self.log.info("connection is not active because send_ignore fail")
+            return False
+        ret, _, _ = self.cli_run(cmd='uname -r')
+        if ret != 0:
+            self.log.info("connection is not active via sending cmd")
+            return False
         self.log.info("connection is active")
         return True
 
