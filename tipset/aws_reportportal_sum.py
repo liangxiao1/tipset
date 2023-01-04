@@ -60,7 +60,11 @@ def main():
     data_file = '/tmp/rp_data_new_instances'
     print("\n---------- Test sum during {}~{} ----------".format(cfg_data.get('start_date'),cfg_data.get('end_date')))
     new_instances = []
+    new_instances_x86 = 0
+    new_instances_arm = 0
     instances = []
+    instances_x86 = 0
+    instances_arm = 0
     composes = []
     for i in records:
         for y in i.get('attributes'):
@@ -73,21 +77,48 @@ def main():
                     instances.append(z.get('value'))
                 if z.get('key') == 'release' and re.match('RHEL-.*\d$', z.get('value')):
                     composes.append(z.get('value'))
+    for instance in set(new_instances):
+        is_found = False
+        for i in records:
+            for y in i.get('attributes'):
+                if y.get('key') == 'instance' and y.get('value') == instance:
+                    is_found = True
+                    for z in i.get('attributes'):
+                        if z.get('key') == 'arch' and 'x86' in z.get('value'):
+                            new_instances_x86 += 1
+                        elif z.get('key') == 'arch' and 'aarch' in z.get('value'):
+                            new_instances_arm += 1
+                if is_found: break
+            if is_found: break
+    for instance in set(instances):
+        is_found = False
+        for i in records:
+            for y in i.get('attributes'):
+                if y.get('key') == 'instance' and y.get('value') == instance:
+                    is_found = True
+                    for z in i.get('attributes'):
+                        if z.get('key') == 'arch' and 'x86' in z.get('value'):
+                            instances_x86 += 1
+                        elif z.get('key') == 'arch' and 'aarch' in z.get('value'):
+                            instances_arm += 1
+                if is_found: break
+            if is_found: break
+
     print("total launches: {}".format(len(records)))
     data_file = '/tmp/rp_data_new_instances'
     with open(data_file,'w') as fh:
         fh.write('\n'.join(set(new_instances)))
-    print("total new instances: {}".format(len(set(new_instances))))
+    print("total new instances:{} x86:{} arm:{}".format(len(set(new_instances)),new_instances_x86, new_instances_arm))
 
     data_file = '/tmp/rp_data_instances'
     with open(data_file,'w') as fh:
         fh.write('\n'.join(set(instances)))
-    print("total instances: {}".format(len(set(instances))))
+    print("total instances:{} x86:{} arm:{}".format(len(set(instances)),instances_x86,instances_arm))
   
     data_file = '/tmp/rp_data_composes'
     with open(data_file,'w') as fh:
         fh.write('\n'.join(set(composes)))
-    print("total composes: {}".format(len(set(composes))))
+    print("total composes:{}".format(len(set(composes))))
 
 if __name__ == "__main__":
     main()    
