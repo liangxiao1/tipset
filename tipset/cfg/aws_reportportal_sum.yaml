@@ -1,0 +1,8 @@
+# report portal base server address
+rp_url:
+rp_token:
+rp_project: 'aws'
+#date range you want to query
+start_date:
+end_date:
+page_size: 300

@@ -3,7 +3,7 @@ import os
 
 setuptools.setup(
     name="tipset",
-    version="0.2.1",
+    version="0.2.2",
     author="Xiao Liang",
     author_email="xiliang@redhat.com",
     description="tipset is a colletion of mini tools about various tips under linux.",
@@ -15,6 +15,7 @@ setuptools.setup(
     package_data={
         'tipset': [
             'data/*',
+            'cfg/*'
         ]
     },
     include_package_data=True,
@@ -35,6 +36,7 @@ setuptools.setup(
                  'aws_amis_search = tipset.aws_amis_search:main',
                  'aws_instance_search = tipset.aws_instance_search:main',
                  'aws_ebs_search = tipset.aws_ebs_search:main',
+                 'aws_reportportal_sum = tipset.aws_reportportal_sum:main',
                  'polarion_adm = tipset.libs.polarion_adm:main'
              ],
          },
