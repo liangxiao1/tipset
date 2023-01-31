@@ -25,19 +25,15 @@ def main():
     cfg_data = {}
     with open(args.cfg_file,'r') as fh:
         cfg_data = load(fh, Loader=Loader)
-    start_time = datetime.datetime.fromisoformat(cfg_data.get('start_date'))
+    start_time = datetime.datetime.fromisoformat(cfg_data.get('start_date')) - datetime.timedelta(days=1)
     start_time = int(start_time.timestamp()*1000)
-    end_time = datetime.datetime.fromisoformat(cfg_data.get('end_date'))
+    end_time = datetime.datetime.fromisoformat(cfg_data.get('end_date')) + datetime.timedelta(days=1)
     end_time = int(end_time.timestamp()*1000)
     
     base_url = "{}/api/v1/{}/launch?filter.gt.startTime={}&filter.lt.endTime={}&page.size={}".format(cfg_data.get('rp_url'),cfg_data.get('rp_project'),start_time, end_time,cfg_data.get('page_size'))
     rp_rq = Request(base_url)
     rp_rq.add_header("accept", "*/*")
     rp_rq.add_header("Authorization","bearer {}".format(cfg_data.get('rp_token')))
-    data_file = '/tmp/rp_data'
-    with request.urlopen(rp_rq) as fh:
-        with open(data_file,'w') as f:
-            f.write(fh.read().decode())
 
     records = []
     print('Getting pages in {} page size.'.format(cfg_data.get('page_size')),sep=' ', end =" ")
@@ -56,7 +52,35 @@ def main():
             else:
                 records.extend(tmp_data.get('content'))
                 break
+    data_file = '/tmp/rp_data'
+    with open(data_file,'w') as f:
+        f.write(str(records))
+    valid_records = []
+    total_cases = 0
+    skipped_cases = 0
+    run_cases = 0
+    passed_cases = 0
+    failed_cases = 0
+    for i in records:
+        is_compose = False
+        for x in i.get('attributes'):
+            if x.get('key') == 'release' and x.get('value').startswith('RHEL'):
+                is_compose = True
+                break
+        if not is_compose:
+            continue
+        if i.get('statistics').get('executions').get('passed') and i.get('statistics').get('executions').get('passed') > 0:
+            valid_records.append(i)
+            total_cases += i.get('statistics').get('executions').get('total')
+            skipped_cases += i.get('statistics').get('executions').get('skipped') or 0
+            passed_cases += i.get('statistics').get('executions').get('passed')
+            failed_cases += i.get('statistics').get('executions').get('failed') or 0
+    run_cases = total_cases - skipped_cases
+    avg_cases = round(run_cases/len(valid_records))
+    avg_pass_cases = round(passed_cases/len(valid_records))
+    avg_pass_rate = passed_cases/run_cases*100
 
+    records = valid_records
     data_file = '/tmp/rp_data_new_instances'
     print("\n---------- Test sum during {}~{} ----------".format(cfg_data.get('start_date'),cfg_data.get('end_date')))
     new_instances = []
@@ -104,21 +128,25 @@ def main():
                 if is_found: break
             if is_found: break
 
-    print("total launches: {}".format(len(records)))
+    print("launches: {}".format(len(records)))
+    print("avg_cases: {}".format(avg_cases))
+    print("avg_pass_cases: {}".format(avg_pass_cases))
+    print("avg_pass_rate: {:.2f}%".format(avg_pass_rate))
     data_file = '/tmp/rp_data_new_instances'
     with open(data_file,'w') as fh:
         fh.write('\n'.join(set(new_instances)))
-    print("total new instances:{} x86:{} arm:{}".format(len(set(new_instances)),new_instances_x86, new_instances_arm))
+    print("new instances:{} x86:{} arm:{}".format(len(set(new_instances)),new_instances_x86, new_instances_arm))
 
     data_file = '/tmp/rp_data_instances'
     with open(data_file,'w') as fh:
         fh.write('\n'.join(set(instances)))
-    print("total instances:{} x86:{} arm:{}".format(len(set(instances)),instances_x86,instances_arm))
+    print("instances: {} x86:{} arm:{}".format(len(set(instances)),instances_x86,instances_arm))
   
     data_file = '/tmp/rp_data_composes'
     with open(data_file,'w') as fh:
         fh.write('\n'.join(set(composes)))
-    print("total composes:{}".format(len(set(composes))))
+    print("composes: {}".format(len(set(composes))))
+    print("data details: {}".format(['/tmp/{}'.format(i) for i in os.listdir('/tmp/') if i.startswith('rp_data')]))
 
 if __name__ == "__main__":
     main()    

@@ -15,6 +15,7 @@ setuptools.setup(
     package_data={
         'tipset': [
             'data/*',
+            'docs/*',
             'cfg/*'
         ]
     },
