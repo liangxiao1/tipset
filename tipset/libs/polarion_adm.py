@@ -172,9 +172,9 @@ class PolarionCase:
     
         if tc.test_steps.steps:
             if tc.test_steps.steps[0].values[0].content != self.casedoc.get("key_steps") or \
-               tc.test_steps.steps[0].values[1].content != self.casedoc.get("Expected Result"):
+               tc.test_steps.steps[0].values[1].content != self.casedoc.get("expected_result"):
                 step1 = TestStep()
-                step1.values = [self.casedoc.get("key_steps") or '', self.casedoc.get("Expected Result") or '']
+                step1.values = [self.casedoc.get("key_steps") or '', self.casedoc.get("expected_result") or '']
                 tc.set_test_steps([step1])
                 msg += "{}: Test step is changed.\n".format(tc.work_item_id)
         # TCMS Bugs can only append, and need de-duplication
@@ -188,6 +188,20 @@ class PolarionCase:
                     changed = True
                     msg += "{}: {} is added to tcmsbugs.\n".format(tc.work_item_id, bug_id)
             tc.tcmsbug = ','.join(tcmsbug_list_new)
+        update_case_hyperlinks = True
+        if len(tc.hyperlinks) > 0:
+            # Check if the hyperlink exists
+            for i in range(len(tc.hyperlinks)):
+                if tc.hyperlinks[i].role == "testscript" and \
+                   tc.hyperlinks[i].uri == self.casedoc.get("automation_field"):
+                   update_case_hyperlinks = False
+                   break
+        if update_case_hyperlinks:
+            #_update_item( tc.hyperlinks, "automation_field")
+            add_hyperlink = tc.add_hyperlink(self.casedoc.get("automation_field"),"testscript")
+            if add_hyperlink:
+                changed = True
+                print("Add hyperlink for case {}".format(tc.work_item_id))
         if changed:
             try:
                 tc.update()

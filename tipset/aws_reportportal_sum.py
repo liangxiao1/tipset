@@ -64,7 +64,7 @@ def main():
     for i in records:
         is_compose = False
         for x in i.get('attributes'):
-            if x.get('key') == 'release' and x.get('value').startswith('RHEL'):
+            if x.get('key') == 'release' and x.get('value').startswith(('RHEL','CentOS')):
                 is_compose = True
                 break
         if not is_compose:
@@ -99,7 +99,7 @@ def main():
             for z in i.get('attributes'):
                 if z.get('key') == 'instance':
                     instances.append(z.get('value'))
-                if z.get('key') == 'release' and re.match('RHEL-.*\d$', z.get('value')):
+                if z.get('key') == 'release' and z.get('value'):
                     composes.append(z.get('value'))
     for instance in set(new_instances):
         is_found = False
