@@ -128,10 +128,10 @@ def main():
                 if is_found: break
             if is_found: break
 
-    print("launches: {}".format(len(records)))
-    print("avg_cases: {}".format(avg_cases))
-    print("avg_pass_cases: {}".format(avg_pass_cases))
-    print("avg_pass_rate: {:.2f}%".format(avg_pass_rate))
+    print("launches:{}".format(len(records)))
+    print("avg_cases:{}".format(avg_cases))
+    print("avg_pass_cases:{}".format(avg_pass_cases))
+    print("avg_pass_rate:{:.2f}%".format(avg_pass_rate))
     data_file = '/tmp/rp_data_new_instances'
     with open(data_file,'w') as fh:
         fh.write('\n'.join(set(new_instances)))
@@ -145,8 +145,15 @@ def main():
     data_file = '/tmp/rp_data_composes'
     with open(data_file,'w') as fh:
         fh.write('\n'.join(set(composes)))
-    print("composes: {}".format(len(set(composes))))
-    print("data details: {}".format(['/tmp/{}'.format(i) for i in os.listdir('/tmp/') if i.startswith('rp_data')]))
+    rhel_compose = 0
+    centos_compose = 0
+    for i in set(composes):
+        if i.startswith('RHEL'):
+            rhel_compose += 1
+        elif i.startswith('CentOS'):
+            centos_compose += 1
+    print("composes:{} RHEL:{} CentOS:{}".format(len(set(composes)),rhel_compose,centos_compose))
+    print("data details:{}".format(['/tmp/{}'.format(i) for i in os.listdir('/tmp/') if i.startswith('rp_data')]))
 
 if __name__ == "__main__":
     main()    
