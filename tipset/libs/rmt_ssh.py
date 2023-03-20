@@ -14,7 +14,67 @@ import time
 import sys
 import os
 from . import minilog
+import threading
+import select
+import argparse
+import socket
 
+def sig_handler(signum, frame):
+    print("sig_handlerXXXXXXXXXX")
+    logging.info('Got signal %s, exit!', signum)
+    sys.exit(0)
+
+
+def handler(chan, host, port):
+    sock = socket.socket()
+    try:
+        sock.connect((host, port))
+    except Exception as e:
+        logging.info("Forwarding request to %s:%d failed: %r" % 
+                  (host, port, e))
+        return
+
+    logging.info(
+        "Connected!  Tunnel open %r -> %r -> %r"
+        % (chan.origin_addr, chan.getpeername(), (host, port))
+    )
+    retry_count = 0
+    while True:
+        r, w, x = select.select([sock, chan], [], [])
+        if sock in r:
+            data = sock.recv(1024)
+            if len(data) == 0:
+                retry_count+=1
+                if retry_count>100:
+                    logging.info("No data received from sock")
+                    break
+            else:
+                chan.send(data)
+        if chan in r:
+            data = chan.recv(1024)
+            if len(data) == 0:
+                if retry_count>100:
+                    logging.info("No data received from chan")
+                    break
+            else:
+                sock.send(data)
+    chan.close()
+    sock.close()
+    logging.info("Tunnel closed from %r" % (chan.origin_addr,))
+ 
+ 
+def reverse_forward_tunnel(server_port, remote_host, remote_port, transport):
+    transport.request_port_forward("", server_port)
+
+    while True:
+        chan = transport.accept(1000)
+        if chan is None:
+            continue
+        thr = threading.Thread(
+            target=handler, args=(chan, remote_host, remote_port)
+        )
+        thr.setDaemon(True)
+        thr.start()
 
 class RemoteSSH():
     """
@@ -37,13 +97,14 @@ class RemoteSSH():
         self.rmt_user = None
         self.rmt_password = None
         self.rmt_keyfile = None
+        self.rmt_proxy = None 
         self.timeout = 180
         self.interval = 10
         self.log = None
 
     def create_connection(self):
         self.ssh_client = build_connection(rmt_node=self.rmt_node, port=self.port, rmt_user=self.rmt_user,
-                rmt_password=self.rmt_password, rmt_keyfile=self.rmt_keyfile, timeout=self.timeout, interval=self.interval, log=self.log)
+                rmt_password=self.rmt_password, rmt_keyfile=self.rmt_keyfile, rmt_proxy=self.rmt_proxy, timeout=self.timeout, interval=self.interval, log=self.log)
 
     def cli_run(self, cmd=None, timeout=180, rmt_get_pty=False):
         return cli_run(self.ssh_client, cmd, timeout, rmt_get_pty=rmt_get_pty, log=self.log)
@@ -116,7 +177,7 @@ class RemoteSSH():
         self.log.info("connection is active")
         return True
 
-def build_connection(rmt_node=None, port=22, rmt_user='ec2-user', rmt_password=None, rmt_keyfile=None, timeout=180, interval=10, log=None):
+def build_connection(rmt_node=None, port=22, rmt_user='ec2-user', rmt_password=None, rmt_keyfile=None, rmt_proxy=None, timeout=180, interval=10, log=None):
     if log is None:
         log = minilog.minilog()
     if isinstance(log, logging.Logger):
@@ -166,6 +227,18 @@ def build_connection(rmt_node=None, port=22, rmt_user='ec2-user', rmt_password=N
                         look_for_keys=False,
                         timeout=60
                     )
+                    if rmt_proxy is not None:
+                        log.info(
+                            "Now forwarding remote port 8080 to %s ..."
+                            % (rmt_proxy))
+                        try:
+                            th_reverse = threading.Thread(target=reverse_forward_tunnel, args=(
+                                8080, rmt_proxy.split(':')[0], int(rmt_proxy.split(':')[
+                                    1]),ssh_client.get_transport()))
+                            th_reverse.setDaemon(True)
+                            th_reverse.start()
+                        except KeyboardInterrupt:
+                            print("C-c: Port forwarding stopped.")
                     return ssh_client
                 except BadHostKeyException as e:
                     badhostkey = True
