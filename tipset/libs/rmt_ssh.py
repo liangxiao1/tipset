@@ -230,18 +230,15 @@ def build_connection(rmt_node=None, port=22, rmt_user='ec2-user', rmt_password=N
                     if rmt_proxy is not None:
                         log.info(
                             "Now forwarding remote port 8080 to %s ..."
-                            % (rmt_proxy)
-                    )
-
-                    try:
-                        th_reverse = threading.Thread(target=reverse_forward_tunnel, args=(
-                            8080, rmt_proxy.split(':')[0], int(rmt_proxy.split(':')[
-                                1]),ssh_client.get_transport()))
-                        th_reverse.setDaemon(True)
-                        th_reverse.start()
-                    except KeyboardInterrupt:
-                        print("C-c: Port forwarding stopped.")
-                        sys.exit(0)
+                            % (rmt_proxy))
+                        try:
+                            th_reverse = threading.Thread(target=reverse_forward_tunnel, args=(
+                                8080, rmt_proxy.split(':')[0], int(rmt_proxy.split(':')[
+                                    1]),ssh_client.get_transport()))
+                            th_reverse.setDaemon(True)
+                            th_reverse.start()
+                        except KeyboardInterrupt:
+                            print("C-c: Port forwarding stopped.")
                     return ssh_client
                 except BadHostKeyException as e:
                     badhostkey = True
