@@ -2,7 +2,16 @@
 rp_url:
 rp_token:
 rp_project: 'aws'
+rp_page_size: 300
 #date range you want to query
 start_date:
 end_date:
-page_size: 300
+# bugzillar base server address
+bugzilla_url: https://bugzilla.redhat.com/
+bugilla_token: 
+bugzilla_names:
+bugzilla_limit: 1000
+# github query information
+gh_url: https://github.com
+gh_project: virt-s1/os-tests
+gh_names:

@@ -38,6 +38,9 @@ import argparse
 import string
 import re
 
+log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO,format="%(levelname)s:%(message)s")
+
 def walk_child(elements, key, is_found=False, results=[]):
     if hasattr(elements, 'children'):
         for child in elements.children:
@@ -63,50 +66,25 @@ def filter_key(src_content, keywords, filed, match_any=True):
                 break
     return ret
 
-def main():
-    parser = argparse.ArgumentParser('Script for get info from html')
-    parser.add_argument('--url',dest='url',action='store',help='specify url',default=None,required=True)
-    parser.add_argument('--keyword',dest='keyword',action='store',help='specify keyword you are looking for, regex accepted',default=None,required=True)
-    parser.add_argument('--andkeys',dest='andkeys',action='store',help='must have keys in and',default=None,required=False)
-    parser.add_argument('--orkeys',dest='orkeys',action='store',help='must have keys in or',default=None,required=False)
-    parser.add_argument('--excludekeys',dest='excludekeys',action='store',help='specify keyword you are not looking for',default=None,required=False)
-    parser.add_argument('--tag',dest='tag',action='store',help='optional specify prefix tag, default is JOB_',default='JOB_',required=False)
-    parser.add_argument('--name',dest='name',action='store',help='optional specify suffix name, default is PKGURL',default='PKGURL',required=False)
-    parser.add_argument('--field',dest='check_field',action='store',help='href|text, default is href',default='href',required=False)
-    parser.add_argument('--outputfield',dest='output_field',action='store',help='href|text, default is href',default='href',required=False)
-    parser.add_argument('--element',dest='check_element',action='store',help='default is "a", you can specify others like "br","tr","div"',default='a',required=False)
-    parser.add_argument('-r', dest='is_walk',action='store_true',help='walk the child to find match items, only support when filed is text', required=False,default=False)
-    parser.add_argument('--dir', dest='file_dir', action='store', default='/tmp',
-                                help='optional, output location, default is /tmp', required=False)
-    args=parser.parse_args()
-    
-    log = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.INFO,format="%(levelname)s:%(message)s")
-    url = args.url
-    keywords = args.keyword
-    andkeys = args.andkeys
-    orkeys = args.orkeys
-    excludekeys = args.excludekeys
-    tag = args.tag
-    name = args.name
+def paser_html_data(url=None,keywords=None, andkeys=None, orkeys=None, excludekeys=None, tag=None,name=None, check_field='href', output_field=None, element='a', is_walk=True, allow_empty=False, file_dir='/tmp'):
     url_fh = urlopen(url)
     html_src = url_fh.read()
     with open('arch_taskinfo.txt','w') as fh:
         fh.writelines(str(html_src))
     soup = BeautifulSoup(html_src,'lxml')
     log.info("loading data done")
-    JOB_DIR = args.file_dir
+    JOB_DIR = file_dir
     JOB_ENV_YAML = JOB_DIR+"/job_env.yaml"
     JOB_ENV_TXT = JOB_DIR+"/job_env.txt"
     results=[]
     
-    s=soup.findAll(args.check_element)
+    s=soup.findAll(element)
     
     for i in s:
         #log.info("name: %s, url: %s",i.get_text(),  i['href'])
-        is_exclude = filter_key(i, excludekeys, args.check_field)
-        is_and_key = filter_key(i,andkeys, args.check_field, match_any=False)
-        is_or_key = filter_key(i,orkeys, args.check_field)
+        is_exclude = filter_key(i, excludekeys, check_field)
+        is_and_key = filter_key(i,andkeys, check_field, match_any=False)
+        is_or_key = filter_key(i,orkeys, check_field)
         if not keywords:
             break
         for keyword in keywords.split(','):
@@ -117,15 +95,18 @@ def main():
             if not is_or_key and orkeys:
                 break
             #breakpoint()
-            if args.check_field == 'href' and i.get('href') and re.match('.*'+keyword+'.*', i.get('href')):
-                log.info("found href %s for target %s", i.get('href'), i.get_text())
-                if args.output_field == 'href':
+            if check_field == 'href' and i.get('href') and re.match('.*'+keyword+'.*', i.get('href')):
+                if not allow_empty:
+                    if not i.get_text() or i.get_text().startswith((' ','\n','  ')):
+                        continue
+                log.info("found href %s for target '%s'", i.get('href'), i.get_text())
+                if output_field == 'href':
                     results.append(i.get('href'))
                 else:
                     results.append(i.get_text())
             elif re.match('.*'+keyword+'.*', i.get_text()):
                 log.info("found %s", i.get_text())
-                if args.output_field == 'href':
+                if output_field == 'href':
                     try:
                         results.append(i.get('href'))
                     except:
@@ -133,7 +114,7 @@ def main():
                         results.append(i.get_text())
                 else:
                     results.append(i.get_text())
-        if len(results) == 0 and args.is_walk:
+        if len(results) == 0 and is_walk:
             for keyword in keywords.split(','):
                 x, y = walk_child(i, keyword)
                 if x:
@@ -152,6 +133,29 @@ def main():
             log.info("Write to %s", JOB_ENV_TXT)
     else:
         log.info("Not found any match content!")
+
+def main():
+    parser = argparse.ArgumentParser('Script for get info from html')
+    parser.add_argument('--url',dest='url',action='store',help='specify url',default=None,required=True)
+    parser.add_argument('--keyword',dest='keyword',action='store',help='specify keyword you are looking for, regex accepted',default=None,required=True)
+    parser.add_argument('--andkeys',dest='andkeys',action='store',help='must have keys in and',default=None,required=False)
+    parser.add_argument('--orkeys',dest='orkeys',action='store',help='must have keys in or',default=None,required=False)
+    parser.add_argument('--excludekeys',dest='excludekeys',action='store',help='specify keyword you are not looking for',default=None,required=False)
+    parser.add_argument('--tag',dest='tag',action='store',help='optional specify prefix tag, default is JOB_',default='JOB_',required=False)
+    parser.add_argument('--name',dest='name',action='store',help='optional specify suffix name, default is PKGURL',default='PKGURL',required=False)
+    parser.add_argument('--field',dest='check_field',action='store',help='href|text, default is href',default='href',required=False)
+    parser.add_argument('--outputfield',dest='output_field',action='store',help='href|text, default is href',default='href',required=False)
+    parser.add_argument('--element',dest='check_element',action='store',help='default is "a", you can specify others like "br","tr","div"',default='a',required=False)
+    parser.add_argument('-r', dest='is_walk',action='store_true',help='walk the child to find match items, only support when filed is text', required=False,default=False)
+    parser.add_argument('--allow_empty', dest='allow_empty',action='store_true',help='allow text is empty or starts with space, tab or newline', required=False,default=False)
+    parser.add_argument('--dir', dest='file_dir', action='store', default='/tmp',
+                                help='optional, output location, default is /tmp', required=False)
+    args=parser.parse_args()
+    paser_html_data(url=args.url,keywords=args.keyword, andkeys=args.andkeys, orkeys=args.orkeys,
+        excludekeys=args.excludekeys, tag=args.tag,name=args.name, check_field=args.check_field, output_field=args.output_field, 
+        element=args.check_element, is_walk=args.is_walk, allow_empty=args.allow_empty, file_dir=args.file_dir)
+    
+    
 
 if __name__ == "__main__":
     main()
