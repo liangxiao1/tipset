@@ -945,6 +945,7 @@
             {"step": "systemctl enable --now libvirtd" , "out": ""},
             {"step": "systemctl disable --now firewalld" , "out": ""},
             {"step": "systemctl enable --now cockpit" , "out": ""},
+            {"step": "sed  's/^root/#root/g' /etc/cockpit/disallowed-users", "out":"no need if no such file found"},
             {"step": "vist https://hostname:9090/" , "out": ""}
         ],
         "tags": "cockpit, management",
@@ -1382,6 +1383,7 @@
         "subject": "gdb to debug a running python process",
         "demo_steps": [
             {"step": "yum install -y gdb", "out": ""},
+            {"step": "sudo yum debuginfo-install python311", "out": ""},
             {"step": "gdb -p 9593", "out": ""},
             {"step": "(gdb) py-bt (if not found, try to install required pks when start gdb)", "out": ""},
             {"step": "(gdb) py-list (if not found, try to install required pks when start gdb)", "out": ""},
@@ -1392,7 +1394,7 @@
         ],
         "tags": "debug, grep",
         "comments": "",
-        "link": ""
+        "link": "https://devguide.python.org/advanced-tools/gdb/"
     },
     "tip_98": {
         "subject": "adb to check Android log",
@@ -1539,6 +1541,54 @@
             {"step": "<graphics type='vnc' port='5950' autoport='no' listen='0.0.0.0' passwd='password'>", "out": ""}
         ],
         "tags": "virsh, vnc",
+        "comments": "",
+        "link": ""
+    },
+    "tip_109": {
+        "subject": "find local subnet ips",
+        "demo_steps": [
+            {"step": "# arp-scan --interface=eth0 --localnet", "out": ""}
+        ],
+        "tags": "arp, network",
+        "comments": "",
+        "link": ""
+    },
+    "tip_110": {
+        "subject": "add user to sudoers",
+        "demo_steps": [
+            {"step": "# usermod -aG wheel $user", "out": ""}
+        ],
+        "tags": "sudo, sudoers",
+        "comments": "",
+        "link": "https://linuxize.com/post/how-to-add-user-to-sudoers-in-ubuntu/"
+    },
+    "tip_111": {
+        "subject": "git push error: failed to push some refs to",
+        "demo_steps": [
+            {"step": "# git pull origin main --rebase", "out": ""},
+            {"step": "# git push origin main", "out": ""}
+        ],
+        "tags": "git, github",
+        "comments": "",
+        "link": "https://articles.assembla.com/en/articles/748133-failed-to-push-some-refs-git-error"
+    },
+    "tip_112": {
+        "subject": "totally abandon a commit instead of revert",
+        "demo_steps": [
+            {"step": "# git reset --hard commitid", "out": ""},
+            {"step": "# git push --force", "out": ""}
+        ],
+        "tags": "git, github",
+        "comments": "Be caution, it is not recommended way without history left",
+        "link": ""
+    },
+    "tip_113": {
+        "subject": "find out high cpu usage process",
+        "demo_steps": [
+            {"step": "# ps -eo pid,ppid,%mem,%cpu,cmd --sort=-%cpu | head", "out": ""},
+            {"step": "# top -b | head -10", "out": ""}
+        ],
+        "tags": "linux, ps",
         "comments": "",
         "link": ""
     }
