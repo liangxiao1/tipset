@@ -63,35 +63,46 @@ class PolarionCase:
             else:
                 log.info('force add new to polarion')
 
-        tc = TestCase()
-        tc.title = self.title
-        #tc.description = self.casedoc.get('description')
-        if isinstance(self.casedoc,OrderedDict):
-            tc.description = ''
-            for key in self.casedoc:
-                tc.description += "{}:{}</br>".format(key, self.casedoc.get(key))
-        else:
-            tc.description = dump(self.casedoc).replace('\n','</br>')
-        maintainer = self.casedoc.get('maintainer')
-        if maintainer and '@' in maintainer:
-            maintainer = maintainer[:maintainer.index('@')]
-        tc.author = maintainer
-        tc.customerscenario = self.casedoc.get("is_customer_case") or False
-        tc.tcmsbug = str(self.casedoc.get("bug_id")) or ''
-        tc.caseimportance = self.casedoc.get("importance") or 'medium'
-        tc.status=self.casedoc.get("case_status") or "approved"
-        tc.caselevel= self.casedoc.get("test_level") or "component"
-        tc.caseautomation=self.casedoc.get("automation_drop_down") or "automated"
-        tc.caseposneg="positive"
-        tc.subsystemteam=self.casedoc.get("subsystem_team") or "sst_virtualization_cloud"
-        tc.testtype=self.casedoc.get("test_type") or "functional"
-        #tc.hyperlinks=self.casedoc.get("automation_field")
-        steps = TestSteps()
-        steps.keys = ["step", "expectedResult"]
-        step1 = TestStep()
-        step1.values = [self.casedoc.get("key_steps") or '', self.casedoc.get("expect_result") or '']
-        steps.steps = [step1]
-        tc.test_steps = steps
+        try:
+            tc = TestCase()
+            tc.title = self.title
+            #tc.description = self.casedoc.get('description')
+            if isinstance(self.casedoc,OrderedDict):
+                tc.description = ''
+                for key in self.casedoc:
+                    tc.description += "{}:{}</br>".format(key, self.casedoc.get(key))
+            else:
+                tc.description = dump(self.casedoc).replace('\n','</br>')
+            maintainer = self.casedoc.get('maintainer')
+            if maintainer and '@' in maintainer:
+                maintainer = maintainer[:maintainer.index('@')]
+            elif not maintainer:
+                maintainer = 'linl'
+            tc.author = maintainer
+            tc.customerscenario = self.casedoc.get("is_customer_case") or False
+            tc.tcmsbug = str(self.casedoc.get("bug_id")) or ''
+            tc.caseimportance = self.casedoc.get("importance") or 'medium'
+            tc.status = "approved"
+            if self.casedoc.get("case_status"):
+                tc.status = self.casedoc.get("case_status").lower()
+            tc.caselevel= self.casedoc.get("test_level") or "component"
+            tc.caseautomation=self.casedoc.get("automation_drop_down") or "automated"
+            tc.caseposneg="positive"
+            tc.subsystemteam=self.casedoc.get("subsystem_team") or "sst_virtualization_cloud"
+            tc.testtype = "functional"
+            if self.casedoc.get("test_type"):
+                tc.testtype = self.casedoc.get("test_type").lower()
+            #tc.hyperlinks=self.casedoc.get("automation_field")
+            steps = TestSteps()
+            steps.keys = ["step", "expectedResult"]
+            step1 = TestStep()
+            step1.values = [self.casedoc.get("key_steps") or '', self.casedoc.get("expect_result") or '']
+            steps.steps = [step1]
+            tc.test_steps = steps
+        except Exception as err:
+            log.error("Init value:{}".format(err))
+            log.info("case_status:{},type:{}".format(tc.status, tc.testtype))
+            return False
         wi = self.is_exists()
         if wi:
             log.info("Exists workitem with title found {}".format(self.title))
@@ -137,10 +148,24 @@ class PolarionCase:
                 new_value = new_value[:new_value.index('@')]
             if key == 'automation_field' and new_value:
                 new_value = [{'Test Script': new_value}]
-            if item != new_value or default_value:
-                item = new_value or default_value
-                msg += "{}: {} is changed to {}\n".format(tc.work_item_id, key, item)
-                changed = True
+            if key == 'test_type':
+                if new_value:
+                    new_value = new_value.lower()
+                else:
+                    new_value = 'functional'
+            if key == 'case_status':
+                if new_value:
+                    new_value = new_value.lower()
+                else:
+                    new_value = "approved"
+            try:
+                if item != new_value or default_value:
+                    item = new_value or default_value
+                    msg += "{}: {} is changed to {}\n".format(tc.work_item_id, key, item)
+                    changed = True
+            except Exception as err:
+                log.error("Init value:{}".format(err))
+                log.info("item:{} new:{}, default:{} casename:{}".format(item,new_value, default_value, self.casedoc.get('case_name')))
             return item
         if isinstance(self.casedoc,OrderedDict):
             tmp_description = ''

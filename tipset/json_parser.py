@@ -51,8 +51,15 @@ from __future__ import print_function
 import logging
 import argparse
 import os
+import sys
 import json
 from collections import OrderedDict
+
+try:
+    from yaml import load, dump
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
 
 LOG = logging.getLogger(__name__)
 LOG_FORMAT = "%(levelname)s:FUNC-%(funcName)s:%(message)s"
@@ -130,11 +137,11 @@ def json_parser(json_message):
             walk_dict(json_message[key], key_name)
     LOG.info(FINAL_DICT)
 
-def write_env_txt():
+def write_env_txt(open_mode='wt'):
     '''
     write to env txt file.
     '''
-    with open(os.path.join(ARGS.file_dir, JOB_ENV_TXT), 'wt') as file_hanle:
+    with open(os.path.join(ARGS.file_dir, JOB_ENV_TXT), open_mode) as file_hanle:
         for key in FINAL_DICT:
             #LOG.debug(type(FINAL_DICT[key]))
             if not isinstance(FINAL_DICT[key], int) and not isinstance(FINAL_DICT[key], float):
@@ -145,11 +152,11 @@ def write_env_txt():
                 LOG.debug("Write %s=%s", key, FINAL_DICT[key])
     LOG.info("Write to %s", os.path.join(ARGS.file_dir, JOB_ENV_TXT))
 
-def write_env_yaml():
+def write_env_yaml(open_mode='wt'):
     '''
     write to env json file.
     '''
-    with open(os.path.join(ARGS.file_dir, JOB_ENV_YAML), 'wt') as file_hanle:
+    with open(os.path.join(ARGS.file_dir, JOB_ENV_YAML), open_mode) as file_hanle:
         for key in FINAL_DICT:
             if not isinstance(FINAL_DICT[key], int) and not isinstance(FINAL_DICT[key], float):
                 file_hanle.write('%s: "%s"\n' % (key, FINAL_DICT[key]))
@@ -171,6 +178,8 @@ def main():
     ARG_PARSER.add_argument('--tag', dest='tag', action='store', default='JOB',
                             help='optional, the prefix tag added to each field, default is "JOB"',
                             required=False)
+    ARG_PARSER.add_argument('--append', dest='is_append', action='store_true',
+                            help='append data to existing file', required=False)
 
     ARGS = ARG_PARSER.parse_args()
     PREFIX_TAG = ARGS.tag
@@ -179,9 +188,29 @@ def main():
         logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
     else:
         logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
-    json_parser(json.loads(ARGS.json_message))
-    write_env_txt()
-    write_env_yaml()
+    
+    src_data = ARGS.json_message
+    dest_data = None
+    try:
+        dest_data = json.loads(src_data)
+    except Exception as err:
+        LOG.info("Cannot load as json wth exception:{}".format(err))
+    if not dest_data:
+        try:
+            dest_data = load(src_data, Loader=Loader)
+        except Exception as err:
+            LOG.info("Cannot load as yaml wth exception:{}".format(err))
+        
+    if not isinstance(dest_data,dict):
+        LOG.info("Only accept json or yaml format string, please check your input:{}".format(src_data))
+        sys.exit(0)
+    open_mode = 'wt'
+    if ARGS.is_append:
+        open_mode = 'at'
+
+    json_parser(dest_data)
+    write_env_txt(open_mode=open_mode)
+    write_env_yaml(open_mode=open_mode)
 
 if __name__ == '__main__':
     main()

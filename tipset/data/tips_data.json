@@ -525,7 +525,8 @@
         "subject": "yum repo file template",
         "demo_steps": [
             {"step": "[rhel7]\nname=rhel7.5\nbaseurl = xxxx(url or file:///xxxx/BaseOS)\nenabled=1\ngpgcheck=0\nproxy=http://127.0.0.1:8080 (option)\n", "out": ""},
-            {"step": "yum repolist --enabled", "out": ""}
+            {"step": "yum repolist --enabled", "out": ""},
+            {"step": "sudo yum  config-manager --set-disabled rhui*", "out": ""}
         ],
         "tags": "yum, repo, install",
         "comments": "/etc/yum.repos.d/xxx.repo",
