@@ -47,7 +47,7 @@ def query_bugzilla(bugzilla_url=None, names=None, start_date=None, end_date=None
         print("-"*20)
         print("name: {} reported: {}".format(name, len(tmp_bugs)))
         for bug in tmp_bugs:
-            print("id:{}, title:{}, component:{}, link:{}".format(bug.id, bug.summary, bugs[0].component, bug.weburl))
+            print("id:{}, title:{}, component:{}, link:{}".format(bug.id, bug.summary, bug.component, bug.weburl))
 
 def query_rp(rp_url=None, rp_token=None, rp_project=None, start_date=None, end_date=None, rp_page_size=300):
 
