@@ -109,8 +109,8 @@ class RemoteSSH():
     def cli_run(self, cmd=None, timeout=180, rmt_get_pty=False):
         return cli_run(self.ssh_client, cmd, timeout, rmt_get_pty=rmt_get_pty, log=self.log)
 
-    def remote_excute(self, cmd, timeout=180, redirect_stdout=False, redirect_stderr=False, rmt_get_pty=False):
-        return remote_excute(self.ssh_client, cmd, timeout, redirect_stdout=redirect_stdout, redirect_stderr=redirect_stderr, rmt_get_pty=rmt_get_pty, log=self.log)
+    def remote_excute(self, cmd, timeout=180, is_log_cmd=True, redirect_stdout=False, redirect_stderr=False, rmt_get_pty=False):
+        return remote_excute(self.ssh_client, cmd, timeout, is_log_cmd, redirect_stdout=redirect_stdout, redirect_stderr=redirect_stderr, rmt_get_pty=rmt_get_pty, log=self.log)
 
     def put_file(self, local_file = None, rmt_file = None):
         if self.log is None:
@@ -303,13 +303,14 @@ def cli_run(ssh_client, cmd,timeout,rmt_get_pty=False, log=None):
     ret = stdout.channel.recv_exit_status()
     return ret, output, errlog
 
-def remote_excute(ssh_client, cmd,timeout, redirect_stdout=False, redirect_stderr=False, rmt_get_pty=False, log=None):
+def remote_excute(ssh_client, cmd,timeout, is_log_cmd=True, redirect_stdout=False, redirect_stderr=False, rmt_get_pty=False, log=None):
     if log is None:
         log = minilog.minilog()
     if redirect_stdout or redirect_stderr:
         cmd = cmd + " 1>/tmp/cmd.out 2>/tmp/cmd.err"
-    log.info("Run on remote: {}".format(cmd))
-    
+    if is_log_cmd:
+        log.info("Run on remote: {}".format(cmd))
+         
     status, output, errlog = cli_run(ssh_client, cmd, timeout, rmt_get_pty=rmt_get_pty, log=log)
     if redirect_stdout or redirect_stderr:
         _, output, _ = cli_run(ssh_client, 'cat /tmp/cmd.out', timeout, rmt_get_pty=rmt_get_pty, log=log)
