@@ -3,7 +3,7 @@ import os
 
 setuptools.setup(
     name="tipset",
-    version="0.2.3",
+    version="0.2.4",
     author="Xiao Liang",
     author_email="xiliang@redhat.com",
     description="tipset is a colletion of mini tools about various tips under linux.",
@@ -38,7 +38,8 @@ setuptools.setup(
                  'aws_instance_search = tipset.aws_instance_search:main',
                  'aws_ebs_search = tipset.aws_ebs_search:main',
                  'aws_reportportal_sum = tipset.aws_reportportal_sum:main',
-                 'polarion_adm = tipset.libs.polarion_adm:main'
+                 'polarion_adm = tipset.libs.polarion_adm:main',
+                 'rhcert_manager = tipset.rhcert_manager:main'
              ],
          },
 )

@@ -74,23 +74,17 @@ def is_dict(item):
     '''
     check item is a dict or not
     '''
-    if  item.__class__ is dict:
-        LOG.debug("It is a dict")
-    else:
-        LOG.debug("It is not a dict")
-        return False
-    return True
+    ret = item.__class__ is dict
+    LOG.debug("{} is a dict:{}".format(item,ret))
+    return ret
 
 def is_list(item):
     '''
     check item is a list or not
     '''
-    if item.__class__ is list:
-        LOG.debug("It is a list")
-    else:
-        LOG.debug("It is not a list")
-        return False
-    return True
+    ret = item.__class__ is list
+    LOG.debug("{} is a list:{}".format(item,ret))
+    return ret
 
 def walk_list(list_items, key_name):
     '''
@@ -144,12 +138,15 @@ def write_env_txt(open_mode='wt'):
     with open(os.path.join(ARGS.file_dir, JOB_ENV_TXT), open_mode) as file_hanle:
         for key in FINAL_DICT:
             #LOG.debug(type(FINAL_DICT[key]))
+            value = FINAL_DICT[key]
+            if value is None:
+                value = ''
             if not isinstance(FINAL_DICT[key], int) and not isinstance(FINAL_DICT[key], float):
-                file_hanle.write('%s="%s"\n' % (key, FINAL_DICT[key]))
-                LOG.debug('Write %s="%s"', key, FINAL_DICT[key])
+                file_hanle.write('%s="%s"\n' % (key, value))
+                LOG.debug('Write %s="%s"', key, value)
             else:
-                file_hanle.write('%s=%s\n' % (key, FINAL_DICT[key]))
-                LOG.debug("Write %s=%s", key, FINAL_DICT[key])
+                file_hanle.write('%s=%s\n' % (key, value))
+                LOG.debug("Write %s=%s", key, value)
     LOG.info("Write to %s", os.path.join(ARGS.file_dir, JOB_ENV_TXT))
 
 def write_env_yaml(open_mode='wt'):
@@ -158,12 +155,15 @@ def write_env_yaml(open_mode='wt'):
     '''
     with open(os.path.join(ARGS.file_dir, JOB_ENV_YAML), open_mode) as file_hanle:
         for key in FINAL_DICT:
+            value = FINAL_DICT[key]
+            if value is None:
+                value = ''
             if not isinstance(FINAL_DICT[key], int) and not isinstance(FINAL_DICT[key], float):
-                file_hanle.write('%s: "%s"\n' % (key, FINAL_DICT[key]))
-                LOG.debug('Write %s: "%s"', key, FINAL_DICT[key])
+                file_hanle.write('%s: "%s"\n' % (key, value))
+                LOG.debug('Write %s: "%s"', key, value)
             else:
-                file_hanle.write("%s: %s\n" % (key, FINAL_DICT[key]))
-                LOG.debug("Write %s: %s", key, FINAL_DICT[key])
+                file_hanle.write("%s: %s\n" % (key, value))
+                LOG.debug("Write %s: %s", key, value)
     LOG.info("Write to %s", os.path.join(ARGS.file_dir, JOB_ENV_YAML))
 
 def main():
@@ -199,7 +199,7 @@ def main():
         try:
             dest_data = load(src_data, Loader=Loader)
         except Exception as err:
-            LOG.info("Cannot load as yaml wth exception:{}".format(err))
+            LOG.info("Cannot load as yaml with exception:{}".format(err))
         
     if not isinstance(dest_data,dict):
         LOG.info("Only accept json or yaml format string, please check your input:{}".format(src_data))
