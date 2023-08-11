@@ -1,0 +1,9 @@
+# SSO server address for retriving JWT token
+sso_server: ''
+# sso username and password for retriving JWT token
+username: ''
+password: ''
+# PNS server address for retriving products, versions, platforms, cert types
+pns_server: ''
+# access web address for managering rhcert ticket
+access_server: ''

@@ -1,0 +1,28 @@
+# section of product
+# for existing product
+product_id:
+# for creating new product or updating existing product
+product_partnerId:
+product_category:
+product_name:
+product_make:
+product_model:
+product_description:
+product_productUrl:
+product_specUrl:
+product_supportUrl:
+# section of certification
+# for existing certification
+cert_id:
+cert_caseNumber:
+# for creating new certification ticket
+cert_classificationId:
+cert_certificationTypeId:
+# same as product_id
+cert_partnerProductId:
+# RHEL version
+cert_versionId:
+# for updating existing product
+cert_attachment:
+cert_attachment_desc:
+

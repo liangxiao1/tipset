@@ -1385,7 +1385,8 @@
         "demo_steps": [
             {"step": "yum install -y gdb", "out": ""},
             {"step": "sudo yum debuginfo-install python311", "out": ""},
-            {"step": "gdb -p 9593", "out": ""},
+            {"step": "gdb -p 9593/gdb python $pid", "out": ""},
+            {"step": "(gdb) source /usr/lib/debug/usr/lib64/libpython3.6m.so.1.0-3.6.8-18.el7.x86_64.debug-gdb.py (only required in rhel7)", "out": ""},
             {"step": "(gdb) py-bt (if not found, try to install required pks when start gdb)", "out": ""},
             {"step": "(gdb) py-list (if not found, try to install required pks when start gdb)", "out": ""},
             {"step": "(gdb) info thread", "out": ""},
