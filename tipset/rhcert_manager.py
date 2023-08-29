@@ -57,6 +57,7 @@ class Product():
         self.make = self.params.get('make') #must
         self.model = self.params.get('model') #must
         self.description = self.params.get('description') #must
+        self.shortDescription = self.params.get('shortDescription') or self.params.get('description')
         self.productUrl = self.params.get('productUrl') #option
         self.specUrl = self.params.get('specUrl') #option
         self.supportUrl = self.params.get('supportUrl') #option
@@ -76,6 +77,7 @@ class Product():
            "make": self.make,
            "model": self.model,
            "description": self.description,
+           "shortDescription": self.shortDescription,
            "productUrl": self.productUrl,
            "specUrl": self.specUrl,
            "supportUrl": self.supportUrl
@@ -89,7 +91,7 @@ class Product():
                    'Authorization': 'Bearer {}'.format(self.token)}
         self.load()
         #for key in chain(self.metadata.keys(), self.params.keys()):
-        for key in ["id","category","name","partnerId","make","model","description","specUrl",'productUrl', "supportUrl"]:
+        for key in ["id","category","name","partnerId","make","model","description",'shortDescription',"specUrl",'productUrl', "supportUrl"]:
             print("{} - {} - {}".format(key, self.params.get(key), self.metadata.get(key)))
             if self.params.get(key) is not None and self.params.get(key) != self.metadata.get(key):
                 if key == 'id':
@@ -235,6 +237,8 @@ class Certification():
 
     def list_cert_types(self):
         url = "{}/certificationTypes".format(cfg_data.get("pns_server"))
+        if self.certificationTypeId is not None:
+            url = "{}/{}".format(url, self.certificationTypeId)
         url_opt(url)
 
     def list_comments(self):
@@ -393,6 +397,7 @@ def main():
     parser_product.add_argument('--make', dest='make', default=None, action='store',help='specify make, must required when create new product', required=False)
     parser_product.add_argument('--model', dest='model', default=None, action='store',help='specify model, must required when create new product', required=False)
     parser_product.add_argument('--description', dest='description', default=None, action='store',help='specify description, must required when create new product', required=False)
+    parser_product.add_argument('--shortDescription', dest='shortDescription', default=None, action='store',help='specify short description, default is the same as description', required=False)
     parser_product.add_argument('--productUrl', dest='productUrl', default=None, action='store',help='specify productUrl which is a valid http(s) format', required=False)
     parser_product.add_argument('--specUrl', dest='specUrl', default=None, action='store',help='specify specUrl  which is a valid http(s) format', required=False)
     parser_product.add_argument('--supportUrl', dest='supportUrl', default=None, action='store',help='specify supportUrl  which is a valid http(s) format', required=False)
