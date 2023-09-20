@@ -92,7 +92,7 @@ def query_rp(rp_url=None, rp_token=None, rp_project=None, start_date=None, end_d
     for i in records:
         is_compose = False
         for x in i.get('attributes'):
-            if x.get('key') == 'release' and x.get('value').startswith(('RHEL','CentOS')):
+            if x.get('key') == 'release' and x.get('value').startswith(('RHEL','CentOS')) and 'CCSP' not in x.get('value'):
                 is_compose = True
                 break
         if not is_compose:

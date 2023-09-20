@@ -208,7 +208,7 @@ def search_instances(region=None, profile=None,key_name=None, tags=None, is_dele
             elif tags is not None:
                 for tag in tags.split(','):
                     if 'Tags' in instance.keys():
-                        for val  in instance['Tags'][0].values():
+                        for val in instance['Tags'][0].values():
                             if tag in val:
                                 tmp_instance.append(instance)
             else:
