@@ -20,7 +20,6 @@ import argparse
 import socket
 
 def sig_handler(signum, frame):
-    print("sig_handlerXXXXXXXXXX")
     logging.info('Got signal %s, exit!', signum)
     sys.exit(0)
 
@@ -120,6 +119,7 @@ class RemoteSSH():
         if os.path.isdir(local_file):
             self.log.info("{} is dir, only file supported now.".format(local_file))
             return False
+        self.log.info('sending {} from local to remote {}'.format(local_file,rmt_file))
         if not os.path.exists(local_file):
             self.log.info('{} not found'.format(local_file))
             return False
@@ -137,6 +137,7 @@ class RemoteSSH():
             self.log = minilog.minilog()
         if isinstance(self.log, logging.Logger):
             logging.getLogger("paramiko").setLevel(logging.INFO)
+        self.log.info('retriving {} from remote to local {}'.format(rmt_file,local_file))
         if os.path.isdir(local_file):
             self.log.info("{} is dir, only file supported now.".format(local_file))
             return False
