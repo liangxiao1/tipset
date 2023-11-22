@@ -36,7 +36,7 @@ There are 4 utils included currently(under /usr/local/bin by default).
 **json_parser**: convert json to yaml or plain text.  
 **html_parser**: dump information from html to yaml and plain text.  
 **aws_amis_search**: search and delete aws amis status in all regions and check whether they are supported.  
-**aws_instance_search**: search and delete aws running instances in all supported regions by keyname/tag
+**aws_resource_monitor**: This is a tool for monitoring resources on aws.
 
 ### **tipsearch** usage
 
@@ -63,9 +63,16 @@ INFO:Total found: 1
 
 ```
 
-### **json_parser usage**
+### **aws_resource_monitor usage examples**
+```bash
+# query resources with specific tag
+$ python aws_resource_monitor.py --filters '[{"Name":"tag:Name","Values":["xiliang*"]}]' --profile xxx --region us-west-2
+# delete resources from csv file
+$ python aws_resource_monitor.py --profile rhui-dev --region us-west-2 --type ami --resource /tmp/aws_images.csv --delete
+```
 
-Please refer to json_parser help guide.
+
+
 
 ### The installed files
 

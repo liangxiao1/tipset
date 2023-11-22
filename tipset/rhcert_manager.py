@@ -17,7 +17,7 @@ except ImportError:
     from yaml import Loader, Dumper
 import mimetypes
 
-def url_opt(url=None, data=None, headers=None, method='GET', ret_format = 'json', print_ret=True):
+def url_opt(url=None, data=None, timeout=1800, headers=None, method='GET', ret_format = 'json', print_ret=True, exit_on_err=True):
     # post or get data from url, the response is default to json format
     if not url:
         print("No url specified!")
@@ -29,7 +29,7 @@ def url_opt(url=None, data=None, headers=None, method='GET', ret_format = 'json'
     if data:
         req.data = data
     try:
-        with request.urlopen(req ) as fh:
+        with request.urlopen(req, timeout=timeout ) as fh:
             #print('Got response from {}'.format(fh.geturl()))
             if ret_format == 'json':
                 data = json.loads(fh.read().decode('utf-8'))
@@ -42,8 +42,10 @@ def url_opt(url=None, data=None, headers=None, method='GET', ret_format = 'json'
         print("exception:{} during process url:{}".format(err,url))
         if 'Unauthorized' in str(err):
             print("Try to init token again and make sure your account have permission to the page!")
-        sys.exit(1)
-    return None
+        if exit_on_err:
+            sys.exit(1)
+        return False
+    return True
 
 
 class Product():
@@ -291,7 +293,18 @@ class Certification():
             post_data, h = encode_multipart_formdata(data)
             headers['content-type'] = h
             url = "{}/attachments/upload".format(self.base_access_url)
-            url_opt(url, data=post_data, headers=headers, method='POST')
+            print("Uploading {}......".format(f_name))
+            loops = 3
+            for i in range(loops):
+                if i == 2:
+                    gen_token()
+                    self.token = load_token()
+                ret = False
+                ret = url_opt(url, data=post_data, headers=headers, method='POST', exit_on_err=False)
+                if ret:
+                    break
+                print("Retry again {}/{}".format(i+1,loops))
+                time.sleep(5)
 
     def attachment_download(self, attachment_id):
         self.attachments_list()

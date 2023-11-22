@@ -106,7 +106,7 @@ def walk_dict(dict_items, key_name_org):
     walk through a dict
     '''
     for key in dict_items:
-        key_name = key_name_org + "_" + str(key)
+        key_name = key_name_org + "_" + str(key).replace('-','_')
         if not is_list(dict_items[key]) and not is_dict(dict_items[key]):
             LOG.info('%s, %s, %s', key_name.upper(), key, dict_items[key])
             FINAL_DICT[key_name.upper()] = dict_items[key]
@@ -121,7 +121,7 @@ def json_parser(json_message):
     '''
     LOG.debug("The original message:\n%s", json_message)
     for key in json_message:
-        key_name = PREFIX_TAG + "_" + str(key)
+        key_name = PREFIX_TAG + "_" + str(key).replace('-','_')
         if not is_dict(json_message[key]) and not is_list(json_message[key]):
             LOG.info('%s: %s', key.upper(), json_message[key])
             FINAL_DICT[key_name.upper()] = json_message[key]
