@@ -38,7 +38,7 @@ There are 4 utils included currently(under /usr/local/bin by default).
 **aws_amis_search**: search and delete aws amis status in all regions and check whether they are supported.  
 **aws_resource_monitor**: This is a tool for monitoring resources on aws.
 
-### **tipsearch** usage
+### **tipsearch usage examples**
 
 Below is a simple example to search sed examples from subject.
 
@@ -67,9 +67,16 @@ INFO:Total found: 1
 ```bash
 # query resources with specific tag
 $ python aws_resource_monitor.py --filters '[{"Name":"tag:Name","Values":["xiliang*"]}]' --profile xxx --region us-west-2
+# query ami with specific id
+$ python aws_resource_monitor.py --filters '[{"Name":"image-id","Values":["ami-xxxxxx"]}]' --profile xxx --region us-east-1 --type ami
+# query volumes exist days over 300 and delete them
+$ python aws_resource_monitor.py --days 300 --profile xxx --region us-west-2 --type volume --delete
+# query instance with specific id and delete it directly
+$ python aws_resource_monitor.py --filters '[{"Name":"instance-id","Values":["i-0cf52ed8ea39xxxxxx"]}]' --profile xxx --region us-west-2 --type instance --delete
 # delete resources from csv file
 $ python aws_resource_monitor.py --profile rhui-dev --region us-west-2 --type ami --resource /tmp/aws_images.csv --delete
 ```
+Filters Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 
 
 

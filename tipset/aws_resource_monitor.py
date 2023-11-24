@@ -24,7 +24,7 @@ INSTANCE_FILE = '/tmp/aws_instances.csv'
 INSTANCE_FILE_HEADERS = ['Region', 'InstanceId','InstanceType', 'KeyName','LaunchTime','Days','Tags','State']
 
 IMAGE_FILE = '/tmp/aws_images.csv'
-IMAGE_FILE_HEADERS = ['Region', 'ImageId','Name','Description','CreationDate','Days','lastLaunchedTime','Days','Tags','State','SnapshotId','Public','OwnerId']
+IMAGE_FILE_HEADERS = ['Region', 'ImageId','Name','Description','CreationDate','LiveDays','lastLaunchedTime','LastDays','Tags','State','SnapshotId','Public','OwnerId']
 
 SNAPSHOTS_FILE = '/tmp/aws_snapshots.csv'
 SNAPSHOTS_FILE_HEADERS = ['Region', 'SnapshotId','Description','Tags','StartTime','Days','State','VolumeId','VolumeSize','State','OwnerId','Images']
@@ -35,7 +35,7 @@ VOLUMES_FILE_HEADERS = ['Region', 'VolumeId','Size','Tags','CreateTime','Days','
 def monitor_instances(regions=None, profile='default', filters=None, is_delete=False, days_over=0, log=None):
     aws_libs.init_csv_header(csv_file=INSTANCE_FILE, header_list=INSTANCE_FILE_HEADERS)
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        all_jobs = {executor.submit(aws_libs.search_instances, region=region, profile=profile, filters=filters, is_delete=is_delete, days_over=0, csv_file=INSTANCE_FILE,csv_header=INSTANCE_FILE_HEADERS, log=log): region for region in regions}
+        all_jobs = {executor.submit(aws_libs.search_instances, region=region, profile=profile, filters=filters, is_delete=is_delete, days_over=days_over, csv_file=INSTANCE_FILE,csv_header=INSTANCE_FILE_HEADERS, log=log): region for region in regions}
         for r in concurrent.futures.as_completed(all_jobs, timeout=1800):
             x = all_jobs[r]
             try:
@@ -53,7 +53,7 @@ def monitor_instances(regions=None, profile='default', filters=None, is_delete=F
 def monitor_snapshots(regions=None, profile='default', filters=None, is_delete=False, days_over=0, log=None):
     aws_libs.init_csv_header(csv_file=SNAPSHOTS_FILE, header_list=SNAPSHOTS_FILE_HEADERS)
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        all_jobs = {executor.submit(aws_libs.search_snapshots, region=region, profile=profile, filters=filters, is_delete=is_delete, days_over=0, csv_file=SNAPSHOTS_FILE,csv_header=SNAPSHOTS_FILE_HEADERS, log=log): region for region in regions}
+        all_jobs = {executor.submit(aws_libs.search_snapshots, region=region, profile=profile, filters=filters, is_delete=is_delete, days_over=days_over, csv_file=SNAPSHOTS_FILE,csv_header=SNAPSHOTS_FILE_HEADERS, log=log): region for region in regions}
         for r in concurrent.futures.as_completed(all_jobs, timeout=1800):
             x = all_jobs[r]
             try:
@@ -69,7 +69,7 @@ def monitor_snapshots(regions=None, profile='default', filters=None, is_delete=F
 def monitor_amis(regions=None, profile='default', filters=None, is_delete=False, days_over=0, log=None):
     aws_libs.init_csv_header(csv_file=IMAGE_FILE, header_list=IMAGE_FILE_HEADERS)
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        all_jobs = {executor.submit(aws_libs.search_images, region=region, profile=profile, filters=filters, is_delete=is_delete, days_over=0, csv_file=IMAGE_FILE,csv_header=IMAGE_FILE_HEADERS, log=log): region for region in regions}
+        all_jobs = {executor.submit(aws_libs.search_images, region=region, profile=profile, filters=filters, is_delete=is_delete, days_over=days_over, csv_file=IMAGE_FILE,csv_header=IMAGE_FILE_HEADERS, log=log): region for region in regions}
         for r in concurrent.futures.as_completed(all_jobs, timeout=1800):
             x = all_jobs[r]
             try:
@@ -85,7 +85,7 @@ def monitor_amis(regions=None, profile='default', filters=None, is_delete=False,
 def monitor_volumes(regions=None, profile='default', filters=None, is_delete=False, days_over=0, log=None):
     aws_libs.init_csv_header(csv_file=VOLUMES_FILE, header_list=VOLUMES_FILE_HEADERS)
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        all_jobs = {executor.submit(aws_libs.search_volumes, region=region, profile=profile, filters=filters, is_delete=is_delete, days_over=0, csv_file=VOLUMES_FILE,csv_header=VOLUMES_FILE_HEADERS, log=log): region for region in regions}
+        all_jobs = {executor.submit(aws_libs.search_volumes, region=region, profile=profile, filters=filters, is_delete=is_delete, days_over=days_over, csv_file=VOLUMES_FILE,csv_header=VOLUMES_FILE_HEADERS, log=log): region for region in regions}
         for r in concurrent.futures.as_completed(all_jobs, timeout=1800):
             x = all_jobs[r]
             try:
@@ -151,13 +151,13 @@ def main():
         aws_libs.del_resource_from_file(resource_file=args.resources, resource_type=args.resource_type, profile=args.profile, log=LOG, is_delete=args.delete)
         sys.exit()
     if 'all' in args.resource_type or 'instance' in args.resource_type:
-        monitor_instances(regions=region_list, profile=args.profile, filters=args.filters, is_delete=args.delete, days_over=0, log=LOG)
+        monitor_instances(regions=region_list, profile=args.profile, filters=args.filters, is_delete=args.delete, days_over=args.days_over, log=LOG)
     if 'all' in args.resource_type or 'ami' in args.resource_type:
-        monitor_amis(regions=region_list, profile=args.profile, filters=args.filters, is_delete=args.delete, days_over=0, log=LOG)
+        monitor_amis(regions=region_list, profile=args.profile, filters=args.filters, is_delete=args.delete, days_over=args.days_over, log=LOG)
     if 'all' in args.resource_type or 'snap' in args.resource_type:
-        monitor_snapshots(regions=region_list, profile=args.profile, filters=args.filters, is_delete=args.delete, days_over=0, log=LOG)
+        monitor_snapshots(regions=region_list, profile=args.profile, filters=args.filters, is_delete=args.delete, days_over=args.days_over, log=LOG)
     if 'all' in args.resource_type or 'volume' in args.resource_type:
-        monitor_volumes(regions=region_list, profile=args.profile, filters=args.filters, is_delete=args.delete, days_over=0, log=LOG)
+        monitor_volumes(regions=region_list, profile=args.profile, filters=args.filters, is_delete=args.delete, days_over=args.days_over, log=LOG)
     
 if __name__ == '__main__':
     main()
