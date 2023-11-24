@@ -153,7 +153,11 @@ def search_instances(region=None, profile=None, filters=None, is_delete=False, d
                               'Tags':tags,
                               'State':instance['State'].get('Name')
                             }
-        save_to_file(resource_file=csv_file,row_dict=instance_row_dict,file_header=csv_header, log=log)
+        if days_over:
+            if int(live_days) >= int(days_over):
+                save_to_file(resource_file=csv_file,row_dict=instance_row_dict,file_header=csv_header, log=log)
+        else:
+            save_to_file(resource_file=csv_file,row_dict=instance_row_dict,file_header=csv_header, log=log)
         instance_id = instance['InstanceId']
         if days_over:
             if is_delete and int(live_days) >= int(days_over):
@@ -214,22 +218,26 @@ def search_images(region=None, profile=None, filters=None, is_delete=False, days
             last_days = today - datetime.fromisoformat(last_launch).replace(tzinfo=None)
             last_days = last_days.days
         else:
-            last_days = 'N/A'
+            last_days = ''
         image_row_dict = { 'Region':region,
                           'ImageId':image.get('ImageId'),
                           'Name':image.get('Name'),
                           'Description':image.get('Description'),
                           'CreationDate':create_date,
-                          'Days':live_days,
+                          'LiveDays':live_days,
                           'lastLaunchedTime':last_launch,
-                          'Days':last_days,
+                          'LastDays':last_days,
                           'Tags':tags,
                           'State':image.get('State'),
                           'SnapshotId':image['BlockDeviceMappings'][0]['Ebs']['SnapshotId'],
                           'Public':image.get('Public'),
                           'OwnerId':account_id
                         }
-        save_to_file(resource_file=csv_file,row_dict=image_row_dict,file_header=csv_header, log=log)
+        if days_over:
+            if int(live_days) >= int(days_over):
+                save_to_file(resource_file=csv_file,row_dict=image_row_dict,file_header=csv_header, log=log)
+        else:
+            save_to_file(resource_file=csv_file,row_dict=image_row_dict,file_header=csv_header, log=log)
         image_id = image['ImageId']
         if days_over:
             if is_delete and int(live_days) >= int(days_over):
@@ -310,7 +318,11 @@ def search_snapshots(region=None, profile=None, filters=None, is_delete=False, d
                           'Images':amis,
                           'OwnerId':account_id
                         }
-        save_to_file(resource_file=csv_file,row_dict=snapshot_row_dict,file_header=csv_header, log=log)
+        if days_over:
+            if int(live_days) >= int(days_over):
+                save_to_file(resource_file=csv_file,row_dict=snapshot_row_dict,file_header=csv_header, log=log)
+        else:
+            save_to_file(resource_file=csv_file,row_dict=snapshot_row_dict,file_header=csv_header, log=log)
         snap_id = snapshot['SnapshotId']
         if days_over:
             if is_delete and int(live_days) >= int(days_over):
@@ -366,7 +378,11 @@ def search_volumes(region=None, profile=None, filters=None, is_delete=False, day
                           'State':volume.get('State'),
                           'SnapshotId':volume.get('SnapshotId'),
                         }
-        save_to_file(resource_file=csv_file,row_dict=volume_row_dict,file_header=csv_header, log=log)
+        if days_over:
+            if int(live_days) >= int(days_over):
+                save_to_file(resource_file=csv_file,row_dict=volume_row_dict,file_header=csv_header, log=log)
+        else:
+            save_to_file(resource_file=csv_file,row_dict=volume_row_dict,file_header=csv_header, log=log)
         vol_id = volume.get('VolumeId')
         if days_over:
             if is_delete and int(live_days) >= int(days_over):
