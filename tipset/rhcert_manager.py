@@ -8,15 +8,24 @@ import time
 from urllib.parse import urlencode
 import urllib.request as request
 import urllib
-from urllib3 import encode_multipart_formdata
+try:
+   from urllib3 import encode_multipart_formdata
+except ImportError:
+    print("please install urllib3")
+    sys.exit(1)
 from itertools import chain
 try:
     from yaml import load, dump
     from yaml import CLoader as Loader, CDumper as Dumper
 except ImportError:
-    from yaml import Loader, Dumper
+    try:
+        from yaml import Loader, Dumper
+    except ImportError:
+        print('please install pyyaml')
+        sys.exit(1)
 import mimetypes
 
+TOKEN_FILE = "/tmp/rhapi_token"
 def url_opt(url=None, data=None, timeout=1800, headers=None, method='GET', ret_format = 'json', print_ret=True, exit_on_err=True):
     # post or get data from url, the response is default to json format
     if not url:
@@ -29,6 +38,7 @@ def url_opt(url=None, data=None, timeout=1800, headers=None, method='GET', ret_f
     if data:
         req.data = data
     try:
+        ret = None
         with request.urlopen(req, timeout=timeout ) as fh:
             #print('Got response from {}'.format(fh.geturl()))
             if ret_format == 'json':
@@ -38,10 +48,10 @@ def url_opt(url=None, data=None, timeout=1800, headers=None, method='GET', ret_f
                 data = fh.read().decode('utf-8')
                 if print_ret: print(data)
             return data
-    except Exception as err:
-        print("exception:{} during process url:{}".format(err,url))
-        if 'Unauthorized' in str(err):
-            print("Try to init token again and make sure your account have permission to the page!")
+    except Exception as exc:
+        print("exception:{} during process url:{}, return: {}".format(exc,url,exc.read().decode()))
+        if 'Unauthorized' in str(exc):
+            print("Try to refresh or init new token again and make sure your account have permission to the page!")
         if exit_on_err:
             sys.exit(1)
         return False
@@ -72,6 +82,12 @@ class Product():
         headers = {'content-type': 'application/json',
                     'Accept': 'application/json',
                    'Authorization': 'Bearer {}'.format(self.token)}
+        if len(self.shortDescription) > 200:
+            #print("The max length of short description should be less than or equal to 200 characters. Use the first sentence instead.")
+            self.shortDescription = self.shortDescription.split('.')[0]
+            if len(self.shortDescription) > 200:
+                self.shortDescription = self.shortDescription[0:200]
+
         data = {
            "category": self.category,
            "name": self.name,
@@ -297,7 +313,7 @@ class Certification():
             loops = 3
             for i in range(loops):
                 if i == 2:
-                    gen_token()
+                    gen_token_from_username_password()
                     self.token = load_token()
                 ret = False
                 ret = url_opt(url, data=post_data, headers=headers, method='POST', exit_on_err=False)
@@ -328,9 +344,9 @@ def check_key(key=None):
         sys.exit(1)
     return cfg_data.get(key)
 
-def gen_token():
-    token_file = "{}/rhapi_token".format(os.path.expanduser('~'))
-    print("generate new token to {}".format(token_file))
+def gen_token_from_username_password():
+    print("Generating from username and password is deprecated, please use device auth!")
+    print("generate new token to {}".format(TOKEN_FILE))
     base_sso_url = check_key(key='sso_server')
     username = check_key(key='username')
     password = check_key(key='password')
@@ -341,20 +357,116 @@ def gen_token():
             'client_id':'rhcert-cwe'}
     post_data = urllib.parse.urlencode(data)
     post_data = post_data.encode()
-    if os.path.exists(token_file):
-        print("{} found, refresh it".format(token_file))
-        os.unlink(token_file)
-    with open(token_file,'w+') as fh:
+    if os.path.exists(TOKEN_FILE):
+        print("{} found, refresh it".format(TOKEN_FILE))
+        os.unlink(TOKEN_FILE)
+    with open(TOKEN_FILE,'w+') as fh:
         data = url_opt(url=base_sso_url,data=post_data, headers=headers, method='POST', ret_format='str', print_ret=False)
         fh.write(data)
 
+def gen_token_from_device_auth():
+    print("Generating token from device auth!")
+    print("generate new token to {}".format(TOKEN_FILE))
+    if os.path.exists(TOKEN_FILE) and os.stat(TOKEN_FILE).st_size > 0:
+        print("{} exists, please refresh it via --refresh or remove it to generate a new token")
+        sys.exit(1)
+    device_auth_url = check_key(key='device_auth_url')
+    token_url = check_key(key='sso_server')
+    headers = {'content-type': 'application/x-www-form-urlencoded'}
+    data = {'client_id':'rhcert-cwe',
+            'scope':'offline_access'
+          }
+    post_data = urllib.parse.urlencode(data)
+    post_data = post_data.encode()
+
+    response = url_opt(url=device_auth_url,data=post_data, headers=headers, method='POST', ret_format='json', print_ret=False)
+    device_code = response.get('device_code')
+    #print(response)
+    #device_code = 'aIYGos_ku682H0EdBAxOH6XQrXY4qBCW7uXSdZSNBk4'
+
+    verification_uri_complete = response.get('verification_uri_complete')
+    input('Please go to {} to complete sign in. Then press ENTER to continue.'.format(verification_uri_complete))
+    post_data = {
+        'grant_type': 'urn:ietf:params:oauth:grant-type:device_code',
+        'client_id': 'rhcert-cwe',
+        'device_code': device_code,
+    }
+    post_data = urllib.parse.urlencode(post_data)
+    post_data = post_data.encode()
+    #print(post_data)
+    with open(TOKEN_FILE,'w+') as fh:
+        data = url_opt(url=token_url,data=post_data, headers=headers, method='POST', ret_format='str', print_ret=False)
+        fh.write(data)
+
+def refresh_token_from_device_auth():
+    token_url = check_key(key='sso_server')
+    refresh_token = load_token(key='refresh_token')
+    headers = {'content-type': 'application/x-www-form-urlencoded'}
+    post_data = {
+        'grant_type': 'refresh_token',
+        'client_id': 'rhcert-cwe',
+        'refresh_token': refresh_token,
+        'scope':'offline_access'
+    }
+    post_data = urllib.parse.urlencode(post_data)
+    post_data = post_data.encode()
+    #print(post_data)
+    if os.path.exists(TOKEN_FILE):
+        print("{} found, refresh it".format(TOKEN_FILE))
+        if os.stat(TOKEN_FILE).st_size > 0:
+            os.rename(TOKEN_FILE, TOKEN_FILE+'.last')
+        else:
+            os.unlink(TOKEN_FILE)
+    with open(TOKEN_FILE,'w+') as fh:
+        data = url_opt(url=token_url,data=post_data, headers=headers, method='POST', ret_format='str', print_ret=False)
+        fh.write(data)
+
+def refresh_token_on_timer():
+    run_venv = '/home/p3_venv/bin/activate'
+    if not os.path.exists(run_venv):
+        print('please create and install tipset to virtual env /home/p3_venv')
+        sys.exit(0)
+    if not os.path.exists(TOKEN_FILE):
+        print('{} not found, please init token firstly!'.format(TOKEN_FILE))
+        sys.exit(0)
+    timer_unit_file = """
+[Unit]
+Description=Refresh rhcert token every 120 mins
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=120min
+Unit=rhcert-manager.service
+
+[Install]
+WantedBy=timers.target
+    """
+    unite_file = """
+[Unit]
+Description=Refresh rhcert token
+
+[Service]
+StandardError=journal
+ExecStart=bash -c "/home/p3_venv/bin/python  /home/p3_venv/bin/rhcert_manager token --refresh"
+
+[Install]
+WantedBy=multi-user.target
+
+    """
+    timer_file = '/usr/lib/systemd/system/rhcert-manager.timer'
+    service_file = '/usr/lib/systemd/system/rhcert-manager.service'
+    with open(timer_file,'w') as fh:
+        fh.write(timer_unit_file)
+    with open(service_file, 'w') as fh:
+        fh.write(unite_file)
+    print('Run "systemctl daemon-reload;systemctl enable --now rhcert-manager.timer" to refesh token every 2 hours')
+
 def load_token(key='access_token'):
-    token_file = "{}/rhapi_token".format(os.path.expanduser('~'))
-    if not os.path.exists(token_file):
-        print("{} not found, exit".format(token_file))
+    if not os.path.exists(TOKEN_FILE):
+        print("{} not found, please init it firstly.".format(TOKEN_FILE))
         sys.exit(1)
     key_value = None
-    with open(token_file, 'r') as fh:
+    with open(TOKEN_FILE, 'r') as fh:
         key_value = json.load(fh).get(key)
     return key_value
 
@@ -425,6 +537,8 @@ def main():
     parser_token = subparsers.add_parser('token', help='token create or renew')
     parser_token.add_argument('--cfg', dest='cfg', default='~/rhcert_manager.yaml', action='store',help='specify configuration file, default is "~/rhcert_manager.yaml"', required=False)
     parser_token.add_argument('--init', dest='init', action='store_true',help='init token', required=False)
+    parser_token.add_argument('--refresh', dest='refresh', action='store_true',help='refresh token', required=False)
+    parser_token.add_argument('--refresh_on_timer', dest='refresh_on_timer', action='store_true',help='refresh token on schedule', required=False)
     parser_token.set_defaults(which='token')
 
     args = parser.parse_args()
@@ -483,7 +597,12 @@ def main():
 
     if args.which == 'token':
         if args.init:
-            gen_token()
+            #gen_token_from_username_password()
+            gen_token_from_device_auth()
+        if args.refresh:
+            refresh_token_from_device_auth()
+        if args.refresh_on_timer:
+            refresh_token_on_timer()
 
 if __name__ == "__main__":
     main()
