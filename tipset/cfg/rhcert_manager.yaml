@@ -1,6 +1,7 @@
 # SSO server address for retriving JWT token
 sso_server: ''
-# sso username and password for retriving JWT token
+device_auth_url: ''
+# sso username and password for retriving JWT token, this method is deprecated.
 username: ''
 password: ''
 # PNS server address for retriving products, versions, platforms, cert types
