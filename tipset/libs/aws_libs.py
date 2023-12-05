@@ -11,6 +11,7 @@ import csv
 from filelock import FileLock
 import os
 import json
+import traceback
 
 def aws_init_key(region=None, profile=None, log=None, client_type='ec2',resource_type='ec2'):
     if log is None:
@@ -107,7 +108,7 @@ def print_instance(instance=None, days_over=0, csv_file=None, log=None):
                 tag, instance['LaunchTime'], 
                 instance_id,instance['State']['Name'],live_days,zone])
 
-def search_instances(region=None, profile=None, filters=None, is_delete=False, days_over=0, csv_file=None, csv_header=None, log=None):
+def search_instances(region=None, profile=None, filters=None, is_delete=False, days_over=0, csv_file=None, csv_header=None, log=None,exclude_tags=None):
     if not log:
         log = minilog.minilog()
     resource, client = aws_init_key(profile=profile, region=region, log=log)
@@ -138,12 +139,19 @@ def search_instances(region=None, profile=None, filters=None, is_delete=False, d
         today = datetime.today()
         live_days = today - instance['LaunchTime'].replace(tzinfo=None)
         live_days = live_days.days
-        tags = None
+        tags = ''
         if 'Tags' in instance.keys():
-            try:
-                tags = instance['Tags'][0].get('Value')
-            except Exception:
-                pass
+            for tag in instance['Tags']:
+                tags += tag.get('Value')
+            is_excluded = False
+            if exclude_tags:
+                for tag in exclude_tags.split(','):
+                    if tag in tags:
+                        print("exclude {} as tag {} found".format(instance.get('InstanceId'),tag))
+                        is_excluded = True
+                        break
+            if is_excluded:
+                continue
         instance_row_dict = { 'Region':region,
                               'InstanceId':instance.get('InstanceId'),
                               'InstanceType':instance.get('InstanceType'),
@@ -168,7 +176,7 @@ def search_instances(region=None, profile=None, filters=None, is_delete=False, d
 
 #def search_images(region, regionids, result_list, is_check, filter_json, filter,amiids,is_delete, tag_skip, profile, days_over=0):
 
-def search_images(region=None, profile=None, filters=None, is_delete=False, days_over=0, csv_file=None, csv_header=None, log=None):
+def search_images(region=None, profile=None, filters=None, is_delete=False, days_over=0, csv_file=None, csv_header=None, log=None, exclude_tags=None):
     if not log:
         log = minilog.minilog()
     _, sts_client = aws_init_key(profile=profile, region=region, client_type='sts', log=log)
@@ -200,9 +208,20 @@ def search_images(region=None, profile=None, filters=None, is_delete=False, days
         tmp_dict_all = client.describe_images(NextToken=nexttoken)
 #IMAGE_FILE_HEADERS = ['Region', 'ImageId','Name','Description','CreationDate','Days','lastLaunchedTime','Days','Tags','State','SnapshotId','Public','OwnerId']
     for image in images_dict['Images']:
-        tags = None
+        tags = ''
         if 'Tags' in image.keys():
-            tags = image['Tags'][0]['Value']
+            #tags = image['Tags'][0]['Value']
+            for tag in image['Tags']:
+                tags += tag.get('Value')
+            is_excluded = False
+            if exclude_tags:
+                for tag in exclude_tags.split(','):
+                    if tag in tags:
+                        print("exclude {} as tag {} found".format(image.get('ImageId'),tag))
+                        is_excluded = True
+                        break
+            if is_excluded:
+                continue
         
         today = datetime.today()
         create_date = datetime.fromisoformat(image.get('CreationDate'))
@@ -246,7 +265,7 @@ def search_images(region=None, profile=None, filters=None, is_delete=False, days
             if is_delete:
                 reource_delete(resource_id=image_id, resource_type='ami', region=region, profile=profile)
 
-def search_snapshots(region=None, profile=None, filters=None, is_delete=False, days_over=0, csv_file=None, csv_header=None, log=None):
+def search_snapshots(region=None, profile=None, filters=None, is_delete=False, days_over=0, csv_file=None, csv_header=None, log=None, exclude_tags=None):
     if not log:
         log = minilog.minilog()
     _, sts_client = aws_init_key(profile=profile, region=region, client_type='sts', log=log)
@@ -277,9 +296,20 @@ def search_snapshots(region=None, profile=None, filters=None, is_delete=False, d
         tmp_dict_all = client.describe_snapshots(NextToken=nexttoken)
 
     for snapshot in snapshots_dict['Snapshots']:
-        tags = None
+        tags = ''
         if 'Tags' in snapshot.keys():
-            tags = snapshot['Tags'][0]['Value']
+            for tag in snapshot['Tags']:
+                tags += tag.get('Value')
+            is_excluded = False
+            if exclude_tags:
+                for tag in exclude_tags.split(','):
+                    if tag in tags:
+                        print("exclude {} as tag {} found".format(snapshot.get('SnapshotId'),tag))
+                        is_excluded = True
+                        break
+            if is_excluded:
+                continue
+        
         today = datetime.today()
         create_date = snapshot.get('StartTime')
         live_days = today - create_date.replace(tzinfo=None)
@@ -331,7 +361,7 @@ def search_snapshots(region=None, profile=None, filters=None, is_delete=False, d
             if is_delete:
                 reource_delete(resource_id=snap_id, resource_type='snapshot', region=region, profile=profile)
 
-def search_volumes(region=None, profile=None, filters=None, is_delete=False, days_over=0, csv_file=None, csv_header=None, log=None):
+def search_volumes(region=None, profile=None, filters=None, is_delete=False, days_over=0, csv_file=None, csv_header=None, log=None, exclude_tags=None):
     if not log:
         log = minilog.minilog()
     _, sts_client = aws_init_key(profile=profile, region=region, client_type='sts', log=log)
@@ -361,9 +391,19 @@ def search_volumes(region=None, profile=None, filters=None, is_delete=False, day
         tmp_dict_all = client.describe_snapshots(NextToken=nexttoken)
 
     for volume in volumes_dict['Volumes']:
-        tags = None
+        tags = ''
         if 'Tags' in volume.keys():
-            tags = volume['Tags'][0]['Value']
+            for tag in volume['Tags']:
+                tags += tag.get('Value')
+            is_excluded = False
+            if exclude_tags:
+                for tag in exclude_tags.split(','):
+                    if tag in tags:
+                        print("exclude {} as tag {} found".format(volume.get('VolumeId'),tag))
+                        is_excluded = True
+                        break
+            if is_excluded:
+                continue
         today = datetime.today()
         create_date = volume.get('CreateTime')
         live_days = today - create_date.replace(tzinfo=None)
@@ -439,7 +479,7 @@ def reource_delete(resource_id=None, resource_type=None, region=None, client=Non
                 log.info("cannot delete {} {}".format(resource_id,exc))  
         elif 'volume' in resource_type:
             vol = resource.Volume(resource_id)
-            if 'vol-ffffffff' in vol:
+            if 'vol-ffffffff' in resource_id:
                 return True
             try:
                 vol.delete()
@@ -465,6 +505,7 @@ def reource_delete(resource_id=None, resource_type=None, region=None, client=Non
             return False
     except Exception as exc:
         log.error("delete {} in {} got error {}".format(resource_id, region, exc))
+        traceback.print_exc()
         return False
     #log.info('{} terminated in {}'.format(resource_id, region))
     return True

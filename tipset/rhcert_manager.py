@@ -1,4 +1,10 @@
 
+#!/usr/bin/env python
+'''
+github : https://github.com/liangxiao1/tipset
+
+This is a tool for interacting with rhcert web console in cli.
+'''
 import argparse
 import json
 import os

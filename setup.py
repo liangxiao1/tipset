@@ -34,7 +34,6 @@ setuptools.setup(
                  'tipsearch = tipset.tipsearch:main',
                  'json_parser = tipset.json_parser:main',
                  'html_parser = tipset.html_parser:main',
-                 'aws_amis_search = tipset.aws_amis_search:main',
                  'aws_resource_monitor = tipset.aws_resource_monitor:main',
                  'aws_reportportal_sum = tipset.aws_reportportal_sum:main',
                  'polarion_adm = tipset.libs.polarion_adm:main',
