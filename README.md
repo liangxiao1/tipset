@@ -32,11 +32,42 @@ tipset is a colletion of mini tools about various tips under linux.
 ## Enjoy it
 
 There are 4 utils included currently(under /usr/local/bin by default).  
-**tipsearch**: a colletion of tips under linux, get to know the command usage with examples instead of looking for manual.  
+**aws_resource_monitor**: monitor resources on aws.  
 **json_parser**: convert json to yaml or plain text.  
-**html_parser**: dump information from html to yaml and plain text.  
-**aws_amis_search**: search and delete aws amis status in all regions and check whether they are supported.  
-**aws_resource_monitor**: This is a tool for monitoring resources on aws.
+**rhcert_manager**: interacting with rhcert web console in cli.  
+**tipsearch**: a colletion of tips under linux, get to know the command usage with examples instead of looking for man page.
+
+
+### **aws_resource_monitor usage examples**
+```bash
+# query resources with specific tag
+$ python aws_resource_monitor.py --filters '[{"Name":"tag:Name","Values":["xiliang*"]}]' --profile xxx --region us-west-2
+# query ami with specific id
+$ python aws_resource_monitor.py --filters '[{"Name":"image-id","Values":["ami-xxxxxx"]}]' --profile xxx --region us-east-1 --type ami
+# query volumes exist days over 300 and delete them
+$ python aws_resource_monitor.py --days 300 --profile xxx --region us-west-2 --type volume --delete
+# query instance with specific id and delete it directly
+$ python aws_resource_monitor.py --filters '[{"Name":"instance-id","Values":["i-0cf52ed8ea39xxxxxx"]}]' --profile xxx --region us-west-2 --type instance --delete
+# delete resources from csv file
+$ python aws_resource_monitor.py --profile rhui-dev --region us-west-2 --type ami --resource /tmp/aws_images.csv --delete
+```
+Filters Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
+
+
+### **rhcert_manager usage examples**  
+
+```bash
+# init token firstly
+$ rhcert_manager token --init
+# create new product
+$ rhcert_manager product --partnerId xxx --category 'Cloud Instance Type' --name xxx --make xxx --model xxx --description xxx --productUrl xxx --specUrl xxx --supportUrl xxx --new
+# create new cert for RHEL-8.7 x86_64 arch
+$ rhcert_manager cert --classificationId 1 --partnerProductId xxx --certificationTypeId 61 --content '{"versionId":"2327","platformId":"7"}' --new
+# query the cert ticket info
+$ rhcert_manager cert --id xxx --list
+# upload the attachment to cert ticket
+$ rhcert_manager cert --id xxx --caseNumber xxx --attachment xxx --attachment_desc 'Auto uploaded.' --attachment_upload
+```
 
 ### **tipsearch usage examples**
 
@@ -62,24 +93,6 @@ INFO:link:
 INFO:Total found: 1
 
 ```
-
-### **aws_resource_monitor usage examples**
-```bash
-# query resources with specific tag
-$ python aws_resource_monitor.py --filters '[{"Name":"tag:Name","Values":["xiliang*"]}]' --profile xxx --region us-west-2
-# query ami with specific id
-$ python aws_resource_monitor.py --filters '[{"Name":"image-id","Values":["ami-xxxxxx"]}]' --profile xxx --region us-east-1 --type ami
-# query volumes exist days over 300 and delete them
-$ python aws_resource_monitor.py --days 300 --profile xxx --region us-west-2 --type volume --delete
-# query instance with specific id and delete it directly
-$ python aws_resource_monitor.py --filters '[{"Name":"instance-id","Values":["i-0cf52ed8ea39xxxxxx"]}]' --profile xxx --region us-west-2 --type instance --delete
-# delete resources from csv file
-$ python aws_resource_monitor.py --profile rhui-dev --region us-west-2 --type ami --resource /tmp/aws_images.csv --delete
-```
-Filters Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
-
-
-
 
 ### The installed files
 

@@ -15,3 +15,9 @@ bugzilla_limit: 1000
 gh_url: https://github.com
 gh_project: virt-s1/os-tests
 gh_names:
+# jira query information
+jira_url: https://issues.redhat.com
+jira_projects:
+jira_exclude_projects:
+jira_names:
+jira_token:

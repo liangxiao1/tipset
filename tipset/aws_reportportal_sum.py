@@ -191,7 +191,7 @@ def query_github(gh_url=None, names=None, start_date=None, end_date=None, gh_pro
     try:
         from tipset.html_parser import paser_html_data
     except Exception:
-        print("please install the latest tipset")
+        print("please install bs4")
         return False
     if not gh_url:
         print("no gh_url specified")
@@ -210,6 +210,54 @@ def query_github(gh_url=None, names=None, start_date=None, end_date=None, gh_pro
         query_url = "https://github.com/{}/pulls?q=is%3Apr+is%3Aclosed+author%3A{}+merged%3A{}..{}".format(gh_project, name, start_date, end_date)
         paser_html_data(url=query_url,keywords="pull/")
 
+def query_jira(jira_url=None, names=None, start_date=None, end_date=None, jira_projects=None,jira_exclude_projects=None,jira_token=None):
+    # ref docs: 
+    # https://docs.github.com/en/search-github/getting-started-with-searching-on-github/understanding-the-search-syntax
+    try:
+        from jira import JIRA
+    except ImportError:
+        print("please install jira module")
+        return False
+    print("#"*20)
+    jira_session = JIRA(token_auth=jira_token,server=jira_url)
+
+    print("Query data from jira")
+    jql_str = ''
+    if jira_projects:
+        converted = tuple(jira_projects.split(','))
+        if jql_str:
+            jql_str = jql_str + " and project in {}".format(converted)
+        else:
+            jql_str = "project in {}".format( converted)
+            
+        if len(converted) == 1:
+            jql_str = jql_str.replace(',','')
+    if jira_exclude_projects:
+        converted = tuple(jira_exclude_projects.split(','))
+        if jql_str:
+            jql_str = jql_str + " and project not in ({})".format(converted)
+        else:
+            jql_str = "project not in {}".format(converted)
+        if len(converted) == 1:
+            jql_str = jql_str.replace(',','')
+    if names:
+        converted = tuple(names.split(','))
+        if jql_str:
+            jql_str = jql_str + " and reporter in {}".format(converted)
+        else:
+            jql_str = "reporter in {}".format(converted)
+        if len(converted) == 1:
+            jql_str = jql_str.replace(',','')
+    jql_str = '{} and createdDate >= {} and createdDate <= {} ORDER BY  created DESC'.format(jql_str, start_date, end_date)
+    print("jql_str:{}".format(jql_str))
+    issues = jira_session.search_issues(jql_str)
+    for issue in issues:
+        if 'MigratedToJIRA' not in issue.fields.labels:
+            components = []
+            if  issue.fields.components:
+                components = [i.name for i in issue.fields.components]
+            print("{} - {}, {}, {}".format(issue.key, issue.fields.summary,components , issue.fields.reporter))
+        
 def main():
     cfg_file_tmpl = os.path.dirname(tipset.__file__) + "/cfg/aws_reportportal_sum.yaml"
 
@@ -230,6 +278,9 @@ def main():
             end_date=cfg_data.get('end_date'), bugzilla_token=cfg_data.get('bugzilla_token'),bugzilla_limit=cfg_data.get('bugzilla_limit'))
     if cfg_data.get('gh_names'):
         query_github(gh_url=cfg_data.get('gh_url'), names=cfg_data.get('gh_names'), start_date=cfg_data.get('start_date'), end_date=cfg_data.get('end_date'), gh_project=cfg_data.get('gh_project'))
+    if cfg_data.get('jira_url'):
+        query_jira(jira_url=cfg_data.get('jira_url'), names=cfg_data.get('jira_names'), start_date=cfg_data.get('start_date'), end_date=cfg_data.get('end_date'), 
+        jira_projects=cfg_data.get('jira_project'),jira_exclude_projects=cfg_data.get('jira_exclude_projects'),jira_token=cfg_data.get('jira_token'))
 
 if __name__ == "__main__":
     main()    
