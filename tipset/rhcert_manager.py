@@ -11,6 +11,7 @@ import os
 import ssl
 import sys
 import time
+from tipset.libs.generic_libs import url_opt
 from urllib.parse import urlencode
 import urllib.request as request
 import urllib
@@ -32,37 +33,6 @@ except ImportError:
 import mimetypes
 
 TOKEN_FILE = "/tmp/rhapi_token"
-def url_opt(url=None, data=None, timeout=1800, headers=None, method='GET', ret_format = 'json', print_ret=True, exit_on_err=True):
-    # post or get data from url, the response is default to json format
-    if not url:
-        print("No url specified!")
-        return None
-    req = request.Request(url, method=method)
-    if headers:
-        for k in headers:
-            req.add_header(k, headers.get(k))
-    if data:
-        req.data = data
-    try:
-        ret = None
-        with request.urlopen(req, timeout=timeout ) as fh:
-            #print('Got response from {}'.format(fh.geturl()))
-            if ret_format == 'json':
-                data = json.loads(fh.read().decode('utf-8'))
-                if print_ret: print(json.dumps(data, indent=4))
-            else:
-                data = fh.read().decode('utf-8')
-                if print_ret: print(data)
-            return data
-    except Exception as exc:
-        print("exception:{} during process url:{}, return: {}".format(exc,url,exc.read().decode()))
-        if 'Unauthorized' in str(exc):
-            print("Try to refresh or init new token again and make sure your account have permission to the page!")
-        if exit_on_err:
-            sys.exit(1)
-        return False
-    return True
-
 
 class Product():
 
@@ -497,7 +467,7 @@ def query(query_kw=None):
 def main():
     
     parser = argparse.ArgumentParser(description='This tool is for managering rhcert tasks in cli by calling rest APIs')
-    subparsers = parser.add_subparsers(help='certification, partner products, token help')
+    subparsers = parser.add_subparsers(help='certification, partner products, token help', required=True)
     parser_cert = subparsers.add_parser('cert', help='cert ticket create, update, list, attachment manage')
     parser_cert.add_argument('--id', dest='id', default=None, action='store',help='specify certification ticket id', required=False)
     parser_cert.add_argument('--caseNumber', dest='caseNumber', default=None, action='store',help='specify caseNumber', required=False)

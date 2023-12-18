@@ -2,7 +2,7 @@
 
 ## Introduction
 
-tipset is a colletion of mini tools about various tips under linux.
+tipset is a tool collection about various tips under linux.
 
 ## Installation
 
@@ -10,12 +10,10 @@ tipset is a colletion of mini tools about various tips under linux.
 
 `# pip install tipset`
 
-### Install from source code
+### Install from code repo directly
 
 ```bash
-# git clone https://github.com/liangxiao1/tipset.git
-# cd tipset
-# python3 setup.py install
+# pip install git+https://github.com/liangxiao1/tipset.git@main
 ```
 
 ### Build wheel from source code and install it
@@ -34,22 +32,22 @@ tipset is a colletion of mini tools about various tips under linux.
 There are 4 utils included currently(under /usr/local/bin by default).  
 **aws_resource_monitor**: monitor resources on aws.  
 **json_parser**: convert json to yaml or plain text.  
-**rhcert_manager**: interacting with rhcert web console in cli.  
-**tipsearch**: a colletion of tips under linux, get to know the command usage with examples instead of looking for man page.
-
+**rhcert_manager**: interact with rhcert web console in cli.  
+**rp_manager**: interact with reportportal in cli.  
+**tipsearch**: a collection of tips under linux, get to know the command usage with examples instead of looking for man page.
 
 ### **aws_resource_monitor usage examples**
 ```bash
 # query resources with specific tag
-$ python aws_resource_monitor.py --filters '[{"Name":"tag:Name","Values":["xiliang*"]}]' --profile xxx --region us-west-2
+$ aws_resource_monitor --filters '[{"Name":"tag:Name","Values":["xiliang*"]}]' --profile xxx --region us-west-2
 # query ami with specific id
-$ python aws_resource_monitor.py --filters '[{"Name":"image-id","Values":["ami-xxxxxx"]}]' --profile xxx --region us-east-1 --type ami
+$ aws_resource_monitor --filters '[{"Name":"image-id","Values":["ami-xxxxxx"]}]' --profile xxx --region us-east-1 --type ami
 # query volumes exist days over 300 and delete them
-$ python aws_resource_monitor.py --days 300 --profile xxx --region us-west-2 --type volume --delete
+$ aws_resource_monitor --days 300 --profile xxx --region us-west-2 --type volume --delete
 # query instance with specific id and delete it directly
-$ python aws_resource_monitor.py --filters '[{"Name":"instance-id","Values":["i-0cf52ed8ea39xxxxxx"]}]' --profile xxx --region us-west-2 --type instance --delete
+$ aws_resource_monitor --filters '[{"Name":"instance-id","Values":["i-0cf52ed8ea39xxxxxx"]}]' --profile xxx --region us-west-2 --type instance --delete
 # delete resources from csv file
-$ python aws_resource_monitor.py --profile rhui-dev --region us-west-2 --type ami --resource /tmp/aws_images.csv --delete
+$ aws_resource_monitor --profile rhui-dev --region us-west-2 --type ami --resource /tmp/aws_images.csv --delete
 ```
 Filters Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 
@@ -67,6 +65,22 @@ $ rhcert_manager cert --classificationId 1 --partnerProductId xxx --certificatio
 $ rhcert_manager cert --id xxx --list
 # upload the attachment to cert ticket
 $ rhcert_manager cert --id xxx --caseNumber xxx --attachment xxx --attachment_desc 'Auto uploaded.' --attachment_upload
+```
+
+
+### **rp_manager usage examples**  
+
+```bash
+# create new launch by uploading test logdir
+$ rp_manager.py launch  --cfg rp_manager.yaml --new --logdir XXXX
+# list launch by launch uuid or id
+$ rp_manager launch  --cfg rp_manager.yaml --uuid <launch UUID> --list
+# trigger auto analyze by launch uuid
+$ rp_manager launch  --cfg rp_manager.yaml --uuid <launch UUID> --analyze
+# delete launch by launch uuid
+$ rp_manager launch  --cfg rp_manager.yaml --uuid <launch UUID> --delete
+# list current user information
+$ rp_manager user --list
 ```
 
 ### **tipsearch usage examples**

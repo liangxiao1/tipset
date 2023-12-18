@@ -1,0 +1,16 @@
+# report portal server address
+rp_url: 
+rp_token: 
+rp_project: 'aws'
+rp_page_size: 300
+launch_name: ''
+launch_description: ''
+# [{"key":"aaa", "value":"bbb"},{"key":"ccc", "value":"ddd"}]
+launch_attributes: ''
+launch_logdir: ''
+launch_use_class_name: false
+launch_merge_launches: true
+launch_simple_xml: false
+launch_auto_dashboard: true
+launch_launch_with_class_name: true
+launch_property_filter: [".*"]
