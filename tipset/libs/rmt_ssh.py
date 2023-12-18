@@ -194,7 +194,7 @@ def build_connection(rmt_node=None, port=22, rmt_user='ec2-user', rmt_password=N
         try:
             end_time = time.time()
             if end_time-start_time > timeout:
-                log.info("Unable to make connection!")
+                log.info("timeout({}s) to make connection!".format(timeout))
                 return None
             if rmt_keyfile is None and rmt_password is None:
                 log.info("no password or keyfile for ssh access, use default ssh key setting")
@@ -211,7 +211,7 @@ def build_connection(rmt_node=None, port=22, rmt_user='ec2-user', rmt_password=N
                     timeout=60
                 )
             else:
-                log.info("login system using keyfile")
+                log.info("login system using keyfile:{}".format(rmt_keyfile))
                 if not os.path.exists(rmt_keyfile):
                     log.error("{} not found".format(rmt_keyfile))
                     return None
