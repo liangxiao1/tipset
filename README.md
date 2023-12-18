@@ -68,7 +68,7 @@ $ rhcert_manager cert --id xxx --caseNumber xxx --attachment xxx --attachment_de
 ```
 
 
-### **rp_manager usage examples [cfg template]((https://github.com/liangxiao1/tipset/blob/main/tipset/cfg/rp_manager.yaml))**  
+### **rp_manager usage examples ([cfg template](https://github.com/liangxiao1/tipset/blob/main/tipset/cfg/rp_manager.yaml))**  
 
 ```bash
 # create new launch by uploading test logdir
