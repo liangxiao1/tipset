@@ -52,7 +52,7 @@ $ aws_resource_monitor --profile rhui-dev --region us-west-2 --type ami --resour
 Filters Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 
 
-### **rhcert_manager usage examples**  
+### **rhcert_manager usage examples ([cfg template](https://github.com/liangxiao1/tipset/blob/main/tipset/cfg/rhcert_manager.yaml))**  
 
 ```bash
 # init token firstly
@@ -68,11 +68,11 @@ $ rhcert_manager cert --id xxx --caseNumber xxx --attachment xxx --attachment_de
 ```
 
 
-### **rp_manager usage examples**  
+### **rp_manager usage examples [cfg template]((https://github.com/liangxiao1/tipset/blob/main/tipset/cfg/rp_manager.yaml))**  
 
 ```bash
 # create new launch by uploading test logdir
-$ rp_manager.py launch  --cfg rp_manager.yaml --new --logdir XXXX
+$ rp_manager launch  --cfg rp_manager.yaml --new --logdir XXXX
 # list launch by launch uuid or id
 $ rp_manager launch  --cfg rp_manager.yaml --uuid <launch UUID> --list
 # trigger auto analyze by launch uuid
