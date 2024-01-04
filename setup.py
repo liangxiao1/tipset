@@ -3,7 +3,7 @@ import os
 
 setuptools.setup(
     name="tipset",
-    version="0.2.6",
+    version="0.2.7",
     author="Xiao Liang",
     author_email="xiliang@redhat.com",
     description="tipset is a colletion of mini tools under linux.",

@@ -14,7 +14,7 @@ import re
 import ssl
 import sys
 import time
-from tipset.libs.generic_libs import url_opt
+from tipset.libs.generic_libs import url_opt,find_file
 from urllib.parse import urlencode
 import urllib.request as request
 import urllib
@@ -36,6 +36,11 @@ except ImportError:
         print('please install pyyaml')
         sys.exit(1)
 import mimetypes
+from xml.etree.ElementTree import parse
+import logging
+
+LOG_FORMAT = '%(asctime)s:PID[%(process)d]:%(levelname)s:%(message)s'
+LOG = logging.getLogger(__name__)
 
 class Launch():
     def __init__(self, params):
@@ -68,6 +73,7 @@ class Launch():
         if not os.path.exists(self.launch_logdir):
             print("{} not found!".format(self.launch_logdir))
             sys.exit(1)
+        LOG.info("Create new launch from".format(self.launch_logdir))
         result_xml = None
         for file in os.listdir(self.launch_logdir):
             if file.endswith('.xml'):
@@ -89,18 +95,18 @@ class Launch():
         #f_hand = open("{}/{}".format(self.launch_logdir,result_xml), 'rb')
 
         f_hand = open(zip_file, 'rb')
+        #payload = [{"is_skipped_an_issue": True, "name": self.params.get('launch_name'),"description": self.params.get('launch_description')}]
         data = {
                   "description": self.params.get('launch_description'),
                   #"mode": "DEFAULT",
                   "name": self.params.get('launch_name'),
                   #'file': (result_xml, f_hand.read(), "text/xml"),
-                  'file': (zip_file, f_hand.read(), "application/x-zip-compressed")
+                  'file': (zip_file, f_hand.read(), "application/x-zip-compressed"),
+                  "is_skipped_an_issue": True
                 }
        
-
         post_data, h = encode_multipart_formdata(data)
     
-        #print(post_data)
         headers['content-type'] = h
         req_url = "{}/api/v1/{}/launch/import".format(self.rp_url,self.rp_project)
         ret = url_opt(req_url, data=post_data, headers=headers, method='POST', print_ret=False)
@@ -110,6 +116,9 @@ class Launch():
         self.load()
         self.update(print_ret=False)
         shutil.rmtree(tmp_dir)
+        LOG.info("New launch:{}".format(self.uuid))
+        if self.params.get('attachment'):
+            self.upload_attachment()
 
     def list(self,print_ret=True):
         '''
@@ -121,7 +130,9 @@ class Launch():
             req_url = "{}/api/v1/{}/launch/{}".format(self.rp_url,self.rp_project,self.id)
         elif self.uuid:
             req_url = "{}/api/v1/{}/launch/uuid/{}".format(self.rp_url,self.rp_project,self.uuid)
+        LOG.info("Query launch:{}".format(self.id or self.uuid))
         self.metadata = url_opt(req_url,headers=headers,print_ret=print_ret)
+        LOG.info("Ret:{}".format(self.metadata))
         return True
 
     def analyze(self):
@@ -140,6 +151,7 @@ class Launch():
               "analyzerTypeName": "autoAnalyzer",
               "launchId": self.id
             }
+        LOG.info("launch {}: start analyze.".format(self.id))
         post_data = json.dumps(data)
         post_data = post_data.encode()
         url_opt(req_url, headers=headers, data=post_data, method='POST')
@@ -176,6 +188,7 @@ class Launch():
                 }
         post_data = json.dumps(data)
         post_data = post_data.encode()
+        LOG.info("Delete:{}".format(self.id))
         url_opt(req_url, headers=headers, data=post_data, method='DELETE')
         return True
 
@@ -193,6 +206,7 @@ class Launch():
                   "mode": "DEFAULT"
                 }
 
+        LOG.info("update launch's attributes and description:{}".format(self.id))
         post_data = json.dumps(data)
         post_data = post_data.encode()
         #print(post_data)
@@ -212,6 +226,97 @@ class Launch():
         with open(pdf_report, 'wb') as fh:
             fh.write(data)
             print("Report: {}".format(pdf_report))
+        return True
+
+    def query_item(self, casename):
+        headers = {'Authorization': 'Bearer {}'.format(self.rp_token),
+                  'content-type': 'application/json',
+                  'Accept': '*/*'}
+        # get item uuid
+        LOG.info("query {} in launch {}.".format(casename, self.id))
+
+        req_url = "{}/api/v1/{}/item".format(self.rp_url,self.rp_project)
+        data ={
+            'filter.eq.launchId':self.id,
+            'filter.eq.name': casename,
+            'isLatest':'true',
+            'launchesLimit':'0'
+        }
+        params = urlencode(data)
+        req_url = req_url+'?'+params
+        return url_opt(req_url, headers=headers, method='GET', print_ret=False)
+
+    def update_item(self, case_name=None, attach_file=None):
+        # upload log and attachment to the item
+        headers = {'Authorization': 'Bearer {}'.format(self.rp_token),
+                  'content-type': 'application/json',
+                  'Accept': '*/*'}
+        item_out = self.query_item(case_name)
+        LOG.debug(item_out)
+        item_uuid = item_out['content'][0].get('uuid')
+        item_starttime = item_out['content'][0].get('startTime')
+        f_name = '{}/{}'.format(self.launch_logdir, attach_file)
+        mime_type = 'text/plain'
+        o_mode = 'r'
+        if f_name.endswith('png'):
+            o_mode = 'rb'
+            mime_type = 'image/png'
+        elif f_name.endswith('jpeg'):
+            o_mode = 'rb'
+            mime_type = 'image/jpeg'
+        f_hand = open(f_name, o_mode)
+        
+        payload = [{"itemUuid":item_uuid,"launchUuid":self.uuid,"time":item_starttime,"message":"debug_log","level": "info","file":{"name":case_name}}]
+        
+        data = {
+        'json_request_part': (None, json.dumps(payload), 'application/json'),
+        'file': (case_name, f_hand.read(), mime_type), 
+        }
+        post_data, h = encode_multipart_formdata(data)
+        headers['content-type'] = h
+        req_url="https://reportportal-virtcloud.apps.ocp-c1.prod.psi.redhat.com/api/v1/xiliang_personal/log"
+        url_opt(req_url, data=post_data, headers=headers, method='POST', print_ret=False)
+        LOG.info("{} uploaded.".format(attach_file))
+
+    def upload_attachment(self):
+        '''
+        upload attachment to test cases
+        There are two options we can find the attachment.
+        1st is recommended  and add attachment property in your junit file, the tool will upload all named attachment to the test items.
+        This allows you have different dir layout and file name.
+        <testcase classname="TestCloudInit" name="os_tests.tests.test_cloud_init.TestCloudInit.test_cloud_init_lineoverwrite" time="35.464">
+            <properties>
+                <property name="attachment" value="attachments/TestCloudInit.os_tests.tests.test_cloud_init.TestCloudInit.test_cloud_init_lineoverwrite/os_tests.tests.test_cloud_init.TestCloudInit.test_cloud_init_lineoverwrite.debug"/>
+            </properties>
+            <skipped>not supported from cloudinit 22.1, render profile changed to networkmanager</skipped>
+            <time>35.464</time>
+        </testcase>
+        2nd is attachment filename with test case name, the tool will walk the current dir and find all file contains testcase name and upload it.
+        '''
+        xml_files = find_file(dir_name=self.launch_logdir, f_format='*.xml')
+        LOG.info('Try to upload attachment!')
+        LOG.debug('{} found in {}'.format(xml_files,self.launch_logdir))
+        for xml_file in xml_files:
+        # get attachment path from junit file
+            attach_found = False
+            doc = parse(xml_file)
+            for i in doc.iterfind('testsuite/testcase'):
+                case_name = i.get('name')
+                LOG.info("case_name: {}".format(case_name))
+                for x in i.iterfind('properties/property'):
+                    if x.get('name') == 'attachment':
+                        attach_found = True
+                        attachment_file = x.get('value')
+                        LOG.info("attachment_file: {}".format(attachment_file))
+                        self.update_item(case_name=case_name, attach_file=attachment_file)
+                if not attach_found:
+                    LOG.debug("No attachment property found, try to search case_name under the log dir")
+                    # try to find files named as case_name and uplod it
+                    attachment_files = find_file(dir_name=self.launch_logdir, f_format='*.{}.*'.format(case_name))
+                    if attachment_files:
+                        for attachment in attachment_files:
+                            LOG.info("attachment_file: {}".format(attachment))
+                            self.update_item(case_name=case_name, attach_file=attachment)
         return True
 
 class User():
@@ -240,7 +345,7 @@ class User():
 def main():
     
     parser = argparse.ArgumentParser(description='This tool is for managering reportportal in cli.')
-    subparsers = parser.add_subparsers(help='supported sub tasks', required=True)
+    subparsers = parser.add_subparsers(help='supported sub tasks, run log is aved in /tmp/rp_manager_debug.log', required=True)
     parser_cert = subparsers.add_parser('launch', help='launch create, update, list, attachment manage')
     parser_cert.add_argument('--id', dest='id', default=None, action='store',help='specify launch id', required=False)
     parser_cert.add_argument('--uuid', dest='id', default=None, action='store',help='specify launch uuid', required=False)
@@ -253,6 +358,7 @@ def main():
     parser_cert.add_argument('--delete', dest='delete', action='store_true',help='delete launch by uuid or id', required=False)
     parser_cert.add_argument('--update', dest='update', action='store_true',help='update launch information', required=False)
     parser_cert.add_argument('--report', dest='report', action='store_true',help='get launch report in pdf format', required=False)
+    parser_cert.add_argument('--attachment', dest='attachment', action='store_true',help='upload attachment when create new launch', required=False)
     parser_cert.set_defaults(which='launch')
 
     parser_cert = subparsers.add_parser('user', help='user managerment')
@@ -262,6 +368,7 @@ def main():
     parser_cert.set_defaults(which='user')
 
     args = parser.parse_args()
+    logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT, filename='/tmp/rp_manager_debug.log')
 
     cfg_file = os.path.expanduser(args.cfg)
     if not os.path.exists(cfg_file):
