@@ -73,7 +73,7 @@ class Launch():
         if not os.path.exists(self.launch_logdir):
             print("{} not found!".format(self.launch_logdir))
             sys.exit(1)
-        LOG.info("Create new launch from".format(self.launch_logdir))
+        LOG.info("Create new launch from {}".format(self.launch_logdir))
         result_xml = None
         for file in os.listdir(self.launch_logdir):
             if file.endswith('.xml'):
@@ -303,6 +303,16 @@ class Launch():
             for i in doc.iterfind('testsuite/testcase'):
                 case_name = i.get('name')
                 LOG.info("case_name: {}".format(case_name))
+                dup_element = []
+                tags = [i.tag for i in i.iter()]
+                launch_attachment_include = self.params.get('launch_attachment_include')
+                if launch_attachment_include:
+                    upload_list = launch_attachment_include.split(',')
+                    dup_element = [ x for x in upload_list if x in tags]
+                if not dup_element:
+                    LOG.debug("do not upload attachment: launch_attachment_include set - {} current case set - {}".format(launch_attachment_include,tags)) 
+                    continue
+
                 for x in i.iterfind('properties/property'):
                     if x.get('name') == 'attachment':
                         attach_found = True
