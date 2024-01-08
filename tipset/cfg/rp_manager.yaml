@@ -8,6 +8,11 @@ launch_description: ''
 # [{"key":"aaa", "value":"bbb"},{"key":"ccc", "value":"ddd"}]
 launch_attributes: ''
 launch_logdir: ''
+# upload attachment according result status, eg. failure,error.
+# then only uplod attchment when cases are failure,error.
+# you also can leave it empty to upload all attachment.
+# you also can use your own keywords according to you resul xml file.
+launch_attachment_include: 'failure,error'
 launch_use_class_name: false
 launch_merge_launches: true
 launch_simple_xml: false
