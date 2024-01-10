@@ -39,6 +39,7 @@ import mimetypes
 from xml.etree.ElementTree import parse
 import logging
 
+import datetime
 LOG_FORMAT = '%(asctime)s:PID[%(process)d]:%(levelname)s:%(message)s'
 LOG = logging.getLogger(__name__)
 
@@ -62,6 +63,10 @@ class Launch():
         self.launch_launch_with_class_name = self.params.get('launch_launch_with_class_name')
         self.launch_property_filter = self.params.get('launch_property_filter')
         self.metadata = None
+        self.default_headers = {'Authorization': 'Bearer {}'.format(self.rp_token),
+                  'content-type': 'application/json',
+                  'Accept': '*/*'}
+        self.headers = self.default_headers.copy()
 
     def create(self):
         '''
@@ -81,8 +86,7 @@ class Launch():
                 break
         #print("{} found in {}".format(result_xml, self.launch_logdir))
         #headers = {'content-type': 'multipart/form-data',
-        headers = {'content-type': 'application/x-www-form-urlencoded',
-                   'Authorization': 'Bearer {}'.format(self.rp_token)}
+        self.headers['content-type'] = 'application/x-www-form-urlencoded'
         
         tmp_dir = tempfile.mkdtemp(prefix='rp_manager_',dir='/tmp')
         zip_file = "{}/{}.zip".format(tmp_dir,self.launch_name)
@@ -95,21 +99,24 @@ class Launch():
         #f_hand = open("{}/{}".format(self.launch_logdir,result_xml), 'rb')
 
         f_hand = open(zip_file, 'rb')
-        #payload = [{"is_skipped_an_issue": True, "name": self.params.get('launch_name'),"description": self.params.get('launch_description')}]
+        # depends on different reportportal versions, not all support this parameter in api
+        # we will update the skipped items to not a bug.
+        param_data = {
+            "skippedIsNotIssue": "true",
+            "notIssue": "true"
+            
+        }
         data = {
-                  "description": self.params.get('launch_description'),
-                  #"mode": "DEFAULT",
                   "name": self.params.get('launch_name'),
                   #'file': (result_xml, f_hand.read(), "text/xml"),
                   'file': (zip_file, f_hand.read(), "application/x-zip-compressed"),
-                  "is_skipped_an_issue": True
                 }
        
         post_data, h = encode_multipart_formdata(data)
     
-        headers['content-type'] = h
-        req_url = "{}/api/v1/{}/launch/import".format(self.rp_url,self.rp_project)
-        ret = url_opt(req_url, data=post_data, headers=headers, method='POST', print_ret=False)
+        self.headers['content-type'] = h
+        req_url = "{}/api/v1/{}/launch/import?".format(self.rp_url,self.rp_project,urlencode(param_data))
+        ret = url_opt(req_url, data=post_data, headers=self.headers, method='POST', print_ret=False)
         self.uuid = re.findall('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', ret.get('message'),re.I)[0]
         if self.uuid:
             print(self.uuid)
@@ -124,24 +131,53 @@ class Launch():
         '''
         query launch info by launch id or uuid.
         '''
-        headers = {'Authorization': 'Bearer {}'.format(self.rp_token),
-                  "Accept": "*/*"}
+        self.headers = self.default_headers.copy()
+        self.headers.pop('content-type')
         if self.id:
             req_url = "{}/api/v1/{}/launch/{}".format(self.rp_url,self.rp_project,self.id)
         elif self.uuid:
             req_url = "{}/api/v1/{}/launch/uuid/{}".format(self.rp_url,self.rp_project,self.uuid)
-        LOG.info("Query launch:{}".format(self.id or self.uuid))
-        self.metadata = url_opt(req_url,headers=headers,print_ret=print_ret)
-        LOG.info("Ret:{}".format(self.metadata))
+        
+        if self.id or self.uuid:
+            LOG.info("Query launch:{}".format(self.id or self.uuid))
+            self.metadata = url_opt(req_url,headers=self.headers,print_ret=print_ret)
+            LOG.info("Ret:{}".format(self.metadata))
+        else:
+            start_date = self.params.get('launch_start_date') or datetime.datetime.today().__str__()
+            end_date = self.params.get('launch_end_date') or datetime.datetime.today().__str__()
+
+            start_time = datetime.datetime.fromisoformat(start_date) - datetime.timedelta(days=1)
+            start_time = int(start_time.timestamp()*1000)
+            end_time = datetime.datetime.fromisoformat(end_date) + datetime.timedelta(days=1)
+            end_time = int(end_time.timestamp()*1000)
+            LOG.info("Query project {} launches in {}~{}".format(self.rp_project,start_date, end_date))
+            param_data = {
+                'page.size': self.params.get('rp_page_size'),
+                'filter.gt.startTime': start_time,
+                'filter.lt.endTime': end_time,
+            }
+            records = []
+            page_num = 1
+            while True:
+                LOG.info("get page {}".format(page_num))
+                param_data['page.page'] = page_num
+                req_url = "{}/api/v1/{}/launch?{}".format(self.rp_url,self.rp_project,urlencode(param_data))
+                tmp_data = url_opt(req_url, headers=self.headers, method='GET', print_ret=False)
+                if tmp_data.get("page").get('totalPages') > page_num:
+                    records.extend(tmp_data.get('content'))
+                    page_num += 1
+                else:
+                    records.extend(tmp_data.get('content'))
+                    break
+            print(records)
         return True
 
     def analyze(self):
         '''
         trigger build in analyze launch id.
         '''
-        headers = {'Authorization': 'Bearer {}'.format(self.rp_token),
-                  'content-type': 'application/json',
-                  'Accept': '*/*'}
+        self.headers = self.default_headers
+        self.headers['content-type'] = 'application/json'
         req_url = "{}/api/v1/{}/launch/analyze ".format(self.rp_url,self.rp_project)
         data = {
               "analyzeItemsMode": [
@@ -154,14 +190,16 @@ class Launch():
         LOG.info("launch {}: start analyze.".format(self.id))
         post_data = json.dumps(data)
         post_data = post_data.encode()
-        url_opt(req_url, headers=headers, data=post_data, method='POST')
+        url_opt(req_url, headers=self.headers, data=post_data, method='POST')
         return True
 
     def load(self):
         '''
         init launch property by its return.
         '''
-        headers = {'Authorization': 'Bearer {}'.format(self.rp_token)}
+        self.headers = self.default_headers.copy()
+        self.headers.pop('content-type')
+        self.headers.pop('Accept')
         if self.id is None and self.uuid is None:
             print("no product id or uuid specified yet")
             return False
@@ -177,9 +215,7 @@ class Launch():
         '''
         delete launch by id or uuid.
         '''
-        headers = {'Authorization': 'Bearer {}'.format(self.rp_token),
-                  'content-type': 'application/json',
-                  'Accept': '*/*'}
+        self.headers = self.default_headers
         req_url = "{}/api/v1/{}/launch ".format(self.rp_url,self.rp_project)
         data = {
                   "ids": [
@@ -189,16 +225,14 @@ class Launch():
         post_data = json.dumps(data)
         post_data = post_data.encode()
         LOG.info("Delete:{}".format(self.id))
-        url_opt(req_url, headers=headers, data=post_data, method='DELETE')
+        url_opt(req_url, headers=self.headers, data=post_data, method='DELETE')
         return True
 
     def update(self, print_ret=True):
         '''
         delete launch by id or uuid.
         '''
-        headers = {'Authorization': 'Bearer {}'.format(self.rp_token),
-                  'content-type': 'application/json',
-                  'Accept': '*/*'}
+        self.headers = self.default_headers
         req_url = "{}/api/v1/{}/launch/{}/update ".format(self.rp_url,self.rp_project,self.id)
         data = {
                   "attributes": self.params.get('launch_attributes'),
@@ -210,15 +244,15 @@ class Launch():
         post_data = json.dumps(data)
         post_data = post_data.encode()
         #print(post_data)
-        url_opt(req_url, headers=headers, data=post_data, method='PUT',print_ret=print_ret)
+        url_opt(req_url, headers=self.headers, data=post_data, method='PUT',print_ret=print_ret)
         return True
 
     def report(self,print_ret=False):
         '''
         download launch report in pdf format.
         '''
-        headers = {'Authorization': 'Bearer {}'.format(self.rp_token),
-                  "Accept": "*/*"}
+        self.headers = self.default_headers.copy()
+        self.headers.pop('content-type')
         self.load()
         req_url = "{}/api/v1/{}/launch/{}/report".format(self.rp_url,self.rp_project,self.id)
         data = url_opt(req_url,headers=headers,print_ret=print_ret, ret_format='binary')
@@ -229,9 +263,7 @@ class Launch():
         return True
 
     def query_item(self, casename):
-        headers = {'Authorization': 'Bearer {}'.format(self.rp_token),
-                  'content-type': 'application/json',
-                  'Accept': '*/*'}
+        self.headers = self.default_headers
         # get item uuid
         LOG.info("query {} in launch {}.".format(casename, self.id))
 
@@ -244,13 +276,11 @@ class Launch():
         }
         params = urlencode(data)
         req_url = req_url+'?'+params
-        return url_opt(req_url, headers=headers, method='GET', print_ret=False)
+        return url_opt(req_url, headers=self.headers, method='GET', print_ret=False)
 
     def update_item(self, case_name=None, attach_file=None):
         # upload log and attachment to the item
-        headers = {'Authorization': 'Bearer {}'.format(self.rp_token),
-                  'content-type': 'application/json',
-                  'Accept': '*/*'}
+        self.headers = self.default_headers
         item_out = self.query_item(case_name)
         LOG.debug(item_out)
         item_uuid = item_out['content'][0].get('uuid')
@@ -273,9 +303,9 @@ class Launch():
         'file': (case_name, f_hand.read(), mime_type), 
         }
         post_data, h = encode_multipart_formdata(data)
-        headers['content-type'] = h
+        self.headers['content-type'] = h
         req_url="https://reportportal-virtcloud.apps.ocp-c1.prod.psi.redhat.com/api/v1/xiliang_personal/log"
-        url_opt(req_url, data=post_data, headers=headers, method='POST', print_ret=False)
+        url_opt(req_url, data=post_data, headers=self.headers, method='POST', print_ret=False)
         LOG.info("{} uploaded.".format(attach_file))
 
     def upload_attachment(self):
@@ -337,19 +367,23 @@ class User():
         self.rp_page_size = self.params.get('rp_page_size')
         self.rp_project = self.params.get('rp_project')
         self.metadata = None
+        self.default_headers = {'Authorization': 'Bearer {}'.format(self.rp_token),
+                  'content-type': 'application/json',
+                  'Accept': '*/*'}
+        self.headers = self.default_headers.copy()
 
     def list(self,print_ret=True,all_user=False):
         '''
         query user info
         '''
-        headers = {'Authorization': 'Bearer {}'.format(self.rp_token),
-                  "Accept": "*/*"}
+        self.headers = self.default_headers.copy()
+        self.headers.pop('content-type')
         if all_user:
             req_url = "{}/api/v1/user/all".format(self.rp_url)
         else:
             req_url = "{}/api/v1/user".format(self.rp_url)
  
-        self.metadata = url_opt(req_url,headers=headers,print_ret=print_ret)
+        self.metadata = url_opt(req_url,headers=self.headers,print_ret=print_ret)
         return True
 
 def main():
@@ -401,10 +435,7 @@ def main():
             launch.load()
             launch.update()
         elif args.list:
-            if launch.id:
-                launch.list()
-            else:
-                launch.list_all(partner_id=args.partnerProductId)
+            launch.list()
         elif args.analyze:
             launch.load()
             launch.analyze()
@@ -413,7 +444,7 @@ def main():
         elif args.report:
             launch.report()
         else:
-            supported_actions = ['--new','--update','--list','--list_all','--analyze','--delete','--report']
+            supported_actions = ['--new','--update','--list','--analyze','--delete','--report']
             print("Please specify actions in {}".format(supported_actions))
 
     if args.which == "user":
