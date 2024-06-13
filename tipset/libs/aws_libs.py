@@ -176,7 +176,7 @@ def search_instances(region=None, profile=None, filters=None, is_delete=False, d
 
 #def search_images(region, regionids, result_list, is_check, filter_json, filter,amiids,is_delete, tag_skip, profile, days_over=0):
 
-def search_images(region=None, profile=None, filters=None, is_delete=False, days_over=0, csv_file=None, csv_header=None, log=None, exclude_tags=None):
+def search_images(region=None, profile=None, filters=None, is_delete=False, days_over=0, csv_file=None, csv_header=None, log=None, exclude_tags=None, exclude_latest=None):
     if not log:
         log = minilog.minilog()
     _, sts_client = aws_init_key(profile=profile, region=region, client_type='sts', log=log)
@@ -206,8 +206,44 @@ def search_images(region=None, profile=None, filters=None, is_delete=False, days
             log.info("Get all images done, length {}".format(len(images_dict["Images"])))
             break
         tmp_dict_all = client.describe_images(NextToken=nexttoken)
-#IMAGE_FILE_HEADERS = ['Region', 'ImageId','Name','Description','CreationDate','Days','lastLaunchedTime','Days','Tags','State','SnapshotId','Public','OwnerId']
+    #IMAGE_FILE_HEADERS = ['Region', 'ImageId','Name','Description','CreationDate','Days','lastLaunchedTime','Days','Tags','State','SnapshotId','Public','OwnerId']
+    images_for_deal = []
+    # update images list info with exclude_latest, live_dats and last_days
     for image in images_dict['Images']:
+        image['exclude'] = None
+        if exclude_latest:
+            for exclude_name in exclude_latest.split(','):
+                if exclude_name in image.get('Name'):
+                    image['exclude'] = exclude_name
+                    break
+        today = datetime.today()
+        create_date = datetime.fromisoformat(image.get('CreationDate'))
+        live_days = today - create_date.replace(tzinfo=None)
+        live_days = live_days.days
+        image_attribute = client.describe_image_attribute(
+                Attribute='lastLaunchedTime',
+                ImageId=image.get('ImageId')
+            )
+        last_launch = image_attribute['LastLaunchedTime'].get('Value')
+        if last_launch:
+            last_days = today - datetime.fromisoformat(last_launch).replace(tzinfo=None)
+            last_days = last_days.days
+        else:
+            last_days = ''
+        image['live_days'] = live_days
+        image['last_launch'] = last_launch
+        image['last_days'] = last_days
+        images_for_deal.append(image)
+    images_ready = []
+    for image in images_for_deal:
+        if not image.get('exclude'):
+            images_ready.append(image)
+            continue
+        for i in images_for_deal:
+            if image.get('exclude') == i.get('exclude'):
+                if int(image.get('live_days')) > int(i.get('live_days')):
+                    if image not in images_ready: images_ready.append(image)
+    for image in images_ready:
         tags = ''
         if 'Tags' in image.keys():
             #tags = image['Tags'][0]['Value']
@@ -222,30 +258,14 @@ def search_images(region=None, profile=None, filters=None, is_delete=False, days
                         break
             if is_excluded:
                 continue
-        
-        today = datetime.today()
-        create_date = datetime.fromisoformat(image.get('CreationDate'))
-        live_days = today - create_date.replace(tzinfo=None)
-        live_days = live_days.days
-
-        image_attribute = client.describe_image_attribute(
-                Attribute='lastLaunchedTime',
-                ImageId=image.get('ImageId')
-            )
-        last_launch = image_attribute['LastLaunchedTime'].get('Value')
-        if last_launch:
-            last_days = today - datetime.fromisoformat(last_launch).replace(tzinfo=None)
-            last_days = last_days.days
-        else:
-            last_days = ''
         image_row_dict = { 'Region':region,
                           'ImageId':image.get('ImageId'),
                           'Name':image.get('Name'),
                           'Description':image.get('Description'),
-                          'CreationDate':create_date,
-                          'LiveDays':live_days,
-                          'lastLaunchedTime':last_launch,
-                          'LastDays':last_days,
+                          'CreationDate':image.get('CreationDate'),
+                          'LiveDays':image.get('live_days'),
+                          'lastLaunchedTime':image.get('last_launch'),
+                          'LastDays':image.get('last_days'),
                           'Tags':tags,
                           'State':image.get('State'),
                           'SnapshotId':image['BlockDeviceMappings'][0]['Ebs']['SnapshotId'],
@@ -253,13 +273,13 @@ def search_images(region=None, profile=None, filters=None, is_delete=False, days
                           'OwnerId':account_id
                         }
         if days_over:
-            if int(live_days) >= int(days_over):
+            if int(image.get('live_days')) >= int(days_over):
                 save_to_file(resource_file=csv_file,row_dict=image_row_dict,file_header=csv_header, log=log)
         else:
             save_to_file(resource_file=csv_file,row_dict=image_row_dict,file_header=csv_header, log=log)
         image_id = image['ImageId']
         if days_over:
-            if is_delete and int(live_days) >= int(days_over):
+            if is_delete and int(image.get('live_days')) >= int(days_over):
                 reource_delete(resource_id=image_id, resource_type='ami', region=region, profile=profile)
         else:    
             if is_delete:

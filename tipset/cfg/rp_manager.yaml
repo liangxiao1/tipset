@@ -13,6 +13,9 @@ launch_logdir: ''
 # you also can leave it empty to upload all attachment.
 # you also can use your own keywords according to you resul xml file.
 launch_attachment_include: 'failure,error'
+#query launch with date range
+launch_start_date: '2024-01-01'
+launch_end_date: '2024-12-31'
 launch_use_class_name: false
 launch_merge_launches: true
 launch_simple_xml: false

@@ -208,6 +208,7 @@ def query_github(gh_url=None, names=None, start_date=None, end_date=None, gh_pro
         print("-"*20)
         print("name:{}".format(name))
         query_url = "https://github.com/{}/pulls?q=is%3Apr+is%3Aclosed+author%3A{}+merged%3A{}..{}".format(gh_project, name, start_date, end_date)
+        print("Retrive info from {}".format(query_url))
         paser_html_data(url=query_url,keywords="pull/")
 
 def query_jira(jira_url=None, names=None, start_date=None, end_date=None, jira_projects=None,jira_exclude_projects=None,jira_token=None):
@@ -257,7 +258,47 @@ def query_jira(jira_url=None, names=None, start_date=None, end_date=None, jira_p
             if  issue.fields.components:
                 components = [i.name for i in issue.fields.components]
             print("{} - {}, {}, {}".format(issue.key, issue.fields.summary,components , issue.fields.reporter))
-        
+    #status changed from "In Progress" to "Integration" during (2024-05-01,now())
+    print("-"*20)
+    print("issue status change from 'In Progress' to 'Integration' which 'QA Contact' are {}".format(names))
+    print("-"*20)
+    jql_str = 'status changed from "In Progress" to "Integration" during ({},{})'.format(start_date, end_date)
+    if names:
+        converted = tuple(names.split(','))
+        if jql_str:
+            jql_str = jql_str + " and 'QA Contact' in {}".format(converted)
+        else:
+            jql_str = "'QA Contact' in {}".format(converted)
+        if len(converted) == 1:
+            jql_str = jql_str.replace(',','')
+    print("jql_str:{}".format(jql_str))
+    issues = jira_session.search_issues(jql_str)
+    for issue in issues:
+        components = []
+        if  issue.fields.components:
+            components = [i.name for i in issue.fields.components]
+        print("{} - {}, {}, reporter: {} QA:{}".format(issue.key, issue.fields.summary,components , issue.fields.reporter,issue.fields.customfield_12315948))
+    #status changed from "In Progress" to "Integration" during (2024-05-01,now())
+    print("-"*20)
+    print("issue status change from 'Integration' to 'Release Pending' which 'QA Contact' are {}".format(names))
+    print("-"*20)
+    jql_str = 'status changed from "Integration" to "Release Pending" during ({},{})'.format(start_date, end_date)
+    if names:
+        converted = tuple(names.split(','))
+        if jql_str:
+            jql_str = jql_str + " and 'QA Contact' in {}".format(converted)
+        else:
+            jql_str = "'QA Contact' in {}".format(converted)
+        if len(converted) == 1:
+            jql_str = jql_str.replace(',','')
+    print("jql_str:{}".format(jql_str))
+    issues = jira_session.search_issues(jql_str)
+    for issue in issues:
+        components = []
+        if  issue.fields.components:
+            components = [i.name for i in issue.fields.components]
+        print("{} - {}, {}, reporter: {} QA:{}".format(issue.key, issue.fields.summary,components , issue.fields.reporter,issue.fields.customfield_12315948))
+
 def main():
     cfg_file_tmpl = os.path.dirname(tipset.__file__) + "/cfg/aws_reportportal_sum.yaml"
 

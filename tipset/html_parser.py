@@ -39,7 +39,6 @@ import string
 import re
 
 log = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO,format="%(levelname)s:%(message)s")
 
 def walk_child(elements, key, is_found=False, results=[]):
     if hasattr(elements, 'children'):
@@ -57,6 +56,7 @@ def filter_key(src_content, keywords, filed, match_any=True):
         return False
     ret = False
     for keyword in keywords.split(','):
+        log.debug("checking {} in {}".format(keyword,src_content))
         if filed == 'href' and src_content.get('href') and re.match('.*'+keyword+'.*', src_content.get('href')):
             ret = True
         elif re.match('.*'+keyword+'.*', src_content.get_text()):
@@ -64,9 +64,14 @@ def filter_key(src_content, keywords, filed, match_any=True):
         else:
             if match_any and ret:
                 break
+    log.debug("checked done. ret:{}".format(ret))
     return ret
 
-def paser_html_data(url=None,keywords=None, andkeys=None, orkeys=None, excludekeys=None, tag=None,name=None, check_field='href', output_field=None, element='a', is_walk=True, allow_empty=False, file_dir='/tmp'):
+def paser_html_data(url=None,keywords=None, andkeys=None, orkeys=None, excludekeys=None, tag=None,name=None, check_field='href', output_field=None, element='a', is_walk=True, allow_empty=False, file_dir='/tmp', is_debug=False):
+    if is_debug:
+        logging.basicConfig(level=logging.DEBUG,format="%(levelname)s:%(message)s")
+    else:
+        logging.basicConfig(level=logging.INFO,format="%(levelname)s:%(message)s")
     url_fh = urlopen(url)
     html_src = url_fh.read()
     with open('arch_taskinfo.txt','w') as fh:
@@ -81,13 +86,15 @@ def paser_html_data(url=None,keywords=None, andkeys=None, orkeys=None, excludeke
     s=soup.findAll(element)
     
     for i in s:
-        #log.info("name: %s, url: %s",i.get_text(),  i['href'])
+        log.debug("name: %s, url: %s",i.get_text(),  i.get('href'))
         is_exclude = filter_key(i, excludekeys, check_field)
         is_and_key = filter_key(i,andkeys, check_field, match_any=False)
         is_or_key = filter_key(i,orkeys, check_field)
+        log.debug("is_exclude:{},is_and_key:{},is_or_key:{}".format(is_exclude, is_and_key, is_or_key))
         if not keywords:
             break
         for keyword in keywords.split(','):
+            log.debug('keyword:{}'.format(keyword))
             if is_exclude and excludekeys:
                 break
             if not is_and_key and andkeys:
@@ -95,6 +102,7 @@ def paser_html_data(url=None,keywords=None, andkeys=None, orkeys=None, excludeke
             if not is_or_key and orkeys:
                 break
             #breakpoint()
+            log.debug("check:{},href:{},keyword:{}".format(check_field,i.get('href'),keyword))
             if check_field == 'href' and i.get('href') and re.match('.*'+keyword+'.*', i.get('href')):
                 if not allow_empty:
                     if not i.get_text() or i.get_text().startswith((' ','\n','  ')):
@@ -150,11 +158,11 @@ def main():
     parser.add_argument('--allow_empty', dest='allow_empty',action='store_true',help='allow text is empty or starts with space, tab or newline', required=False,default=False)
     parser.add_argument('--dir', dest='file_dir', action='store', default='/tmp',
                                 help='optional, output location, default is /tmp', required=False)
+    parser.add_argument('--debug', dest='is_debug',action='store_true',help='run in debug mode', required=False,default=False)
     args=parser.parse_args()
     paser_html_data(url=args.url,keywords=args.keyword, andkeys=args.andkeys, orkeys=args.orkeys,
         excludekeys=args.excludekeys, tag=args.tag,name=args.name, check_field=args.check_field, output_field=args.output_field, 
-        element=args.check_element, is_walk=args.is_walk, allow_empty=args.allow_empty, file_dir=args.file_dir)
-    
+        element=args.check_element, is_walk=args.is_walk, allow_empty=args.allow_empty, file_dir=args.file_dir, is_debug=args.is_debug)
     
 
 if __name__ == "__main__":
