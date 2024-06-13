@@ -2,11 +2,14 @@ import json
 import sys
 from urllib.parse import urlencode
 import urllib.request as request
+from requests_kerberos import HTTPKerberosAuth
+from urllib.parse import urlencode, urlparse
 import urllib
 import os
 import fnmatch
+import requests
 
-def url_opt(url=None, data=None, timeout=1800, headers=None, method='GET', ret_format = 'json', print_ret=True, exit_on_err=True):
+def url_opt(url=None, data=None, timeout=1800, headers=None, method='GET', ret_format = 'json', print_ret=True, exit_on_err=True, auth=None):
     # post or get data from url, the response is default to json format
     if not url:
         print("No url specified!")
@@ -15,6 +18,17 @@ def url_opt(url=None, data=None, timeout=1800, headers=None, method='GET', ret_f
     if headers:
         for k in headers:
             req.add_header(k, headers.get(k))
+    if auth:
+        auth_lists = [HTTPKerberosAuth]
+        if type(auth) not in auth_lists:
+            print("auth method {} not in supported list {}".format(auth, auth_lists))
+            return False
+        if isinstance(auth, HTTPKerberosAuth):
+            response = requests.Response()
+            response.url = url
+            host = urlparse(response.url).hostname
+            h = auth.generate_request_header(response, host)
+            req.add_header('Authorization',h)
     if data:
         req.data = data
     try:

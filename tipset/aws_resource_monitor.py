@@ -66,10 +66,10 @@ def monitor_snapshots(regions=None, profile='default', filters=None, is_delete=F
                 pass
     LOG.info("snapshots saved to {}".format(SNAPSHOTS_FILE))
 
-def monitor_amis(regions=None, profile='default', filters=None, is_delete=False, days_over=0, log=None, exclude_tags=None):
+def monitor_amis(regions=None, profile='default', filters=None, is_delete=False, days_over=0, log=None, exclude_tags=None,exclude_latest=None):
     aws_libs.init_csv_header(csv_file=IMAGE_FILE, header_list=IMAGE_FILE_HEADERS)
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        all_jobs = {executor.submit(aws_libs.search_images, region=region, profile=profile, filters=filters, is_delete=is_delete,exclude_tags=exclude_tags, days_over=days_over, csv_file=IMAGE_FILE,csv_header=IMAGE_FILE_HEADERS, log=log): region for region in regions}
+        all_jobs = {executor.submit(aws_libs.search_images, region=region, profile=profile, filters=filters, is_delete=is_delete,exclude_tags=exclude_tags, exclude_latest=exclude_latest,days_over=days_over, csv_file=IMAGE_FILE,csv_header=IMAGE_FILE_HEADERS, log=log): region for region in regions}
         for r in concurrent.futures.as_completed(all_jobs, timeout=1800):
             x = all_jobs[r]
             try:
@@ -111,6 +111,8 @@ def main():
         help='optional, json filters like in awscli, eg.  \'[{"Name":"tag:Name","Values":["xiliang*"]}]\'', required=False)
     parser.add_argument('--exclude_tags', dest='exclude_tags', action='store',
         help='optional, exclude resources with tags', required=False)
+    parser.add_argument('--exclude_latest', dest='exclude_latest', action='store',
+        help='optional, exclude the latest resource with names, RHEL-8.10.0,RHEL-9.4.0,RHEL-9.5.0', required=False)
     parser.add_argument('--force', dest='is_force', action='store_true',
         help='optional, force action without confirmation', required=False, default=False)
     parser.add_argument('--profile', dest='profile', default='default', action='store',
@@ -155,7 +157,7 @@ def main():
     if 'all' in args.resource_type or 'instance' in args.resource_type:
         monitor_instances(regions=region_list, profile=args.profile, filters=args.filters, is_delete=args.delete, days_over=args.days_over, log=LOG, exclude_tags=args.exclude_tags)
     if 'all' in args.resource_type or 'ami' in args.resource_type:
-        monitor_amis(regions=region_list, profile=args.profile, filters=args.filters, is_delete=args.delete, days_over=args.days_over, log=LOG, exclude_tags=args.exclude_tags)
+        monitor_amis(regions=region_list, profile=args.profile, filters=args.filters, is_delete=args.delete, days_over=args.days_over, log=LOG, exclude_tags=args.exclude_tags, exclude_latest=args.exclude_latest)
     if 'all' in args.resource_type or 'snap' in args.resource_type:
         monitor_snapshots(regions=region_list, profile=args.profile, filters=args.filters, is_delete=args.delete, days_over=args.days_over, log=LOG, exclude_tags=args.exclude_tags)
     if 'all' in args.resource_type or 'volume' in args.resource_type:

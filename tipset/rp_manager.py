@@ -386,6 +386,40 @@ class User():
         self.metadata = url_opt(req_url,headers=self.headers,print_ret=print_ret)
         return True
 
+class Project():
+    def __init__(self, params):
+        self.params = params
+        self.rp_url = self.params.get('rp_url')
+        self.rp_token = self.params.get('rp_token')
+        self.rp_page_size = self.params.get('rp_page_size')
+        self.rp_project = self.params.get('rp_project')
+        self.id = self.params.get('id')
+        self.name = self.params.get('name')
+        self.metadata = None
+        self.default_headers = {'Authorization': 'Bearer {}'.format(self.rp_token),
+                  'content-type': 'application/json',
+                  'Accept': '*/*'}
+        self.headers = self.default_headers.copy()
+
+    def list(self,print_ret=True,all_user=False):
+        '''
+        query project info
+        '''
+        self.headers = self.default_headers.copy()
+        self.headers.pop('content-type')
+        if not self.id and not self.name:
+            req_url = "{}/api/v1/project/names".format(self.rp_url)
+        elif self.id is not None:
+            param_data = {
+                'filter.eq.id' : self.id
+            }
+            req_url = "{}/api/v1/project/list?{}".format(self.rp_url,urlencode(param_data))
+        elif self.name is not None:
+            req_url = "{}/api/v1/project/list/{}".format(self.rp_url,self.name)
+ 
+        self.metadata = url_opt(req_url,headers=self.headers,print_ret=print_ret)
+        return True
+
 def main():
     
     parser = argparse.ArgumentParser(description='This tool is for managering reportportal in cli.')
@@ -404,6 +438,13 @@ def main():
     parser_cert.add_argument('--report', dest='report', action='store_true',help='get launch report in pdf format', required=False)
     parser_cert.add_argument('--attachment', dest='attachment', action='store_true',help='upload attachment when create new launch', required=False)
     parser_cert.set_defaults(which='launch')
+
+    parser_cert = subparsers.add_parser('project', help='project managerment')
+    parser_cert.add_argument('--cfg', dest='cfg', default='~/rp_manager.yaml', action='store',help='specify configuration file, default is "~/rp_manager.yaml"', required=False)
+    parser_cert.add_argument('--id', dest='id', default=None, action='store',help='specify project id, admin role required', required=False)
+    parser_cert.add_argument('--name', dest='name', default=None, action='store',help='specify project name', required=False)
+    parser_cert.add_argument('--list', dest='list', action='store_true',help='default list all projects names(admin role required), you can specify name to access one', required=False)
+    parser_cert.set_defaults(which='project')
 
     parser_cert = subparsers.add_parser('user', help='user managerment')
     parser_cert.add_argument('--cfg', dest='cfg', default='~/rp_manager.yaml', action='store',help='specify configuration file, default is "~/rp_manager.yaml"', required=False)
@@ -455,6 +496,14 @@ def main():
             user.list(all_user=True)
         else:
             supported_actions = ['--list','--list_all']
+            print("Please specify actions in {}".format(supported_actions))
+
+    if args.which == "project":
+        project = Project(cfg_data)
+        if args.list:
+            project.list()
+        else:
+            supported_actions = ['--list']
             print("Please specify actions in {}".format(supported_actions))
 
 
