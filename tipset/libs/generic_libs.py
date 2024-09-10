@@ -8,6 +8,7 @@ import urllib
 import os
 import fnmatch
 import requests
+import ssl
 
 def url_opt(url=None, data=None, timeout=1800, headers=None, method='GET', ret_format = 'json', print_ret=True, exit_on_err=True, auth=None):
     # post or get data from url, the response is default to json format
@@ -33,6 +34,7 @@ def url_opt(url=None, data=None, timeout=1800, headers=None, method='GET', ret_f
         req.data = data
     try:
         ret = None
+        #context = ssl.SSLContext(protocol=ssl.PROTOCOL_TLSv1_2)
         with request.urlopen(req, timeout=timeout ) as fh:
             #print('Got response from {}'.format(fh.geturl()))
             if ret_format == 'json':
