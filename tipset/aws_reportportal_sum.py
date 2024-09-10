@@ -249,8 +249,11 @@ def query_jira(jira_url=None, names=None, start_date=None, end_date=None, jira_p
             jql_str = "reporter in {}".format(converted)
         if len(converted) == 1:
             jql_str = jql_str.replace(',','')
+    print("-"*20)
+    print("new reported issue during {}~{}".format(start_date,end_date))
     jql_str = '{} and createdDate >= {} and createdDate <= {} ORDER BY  created DESC'.format(jql_str, start_date, end_date)
     print("jql_str:{}".format(jql_str))
+    print("-"*20)
     issues = jira_session.search_issues(jql_str)
     for issue in issues:
         if 'MigratedToJIRA' not in issue.fields.labels:
@@ -258,10 +261,11 @@ def query_jira(jira_url=None, names=None, start_date=None, end_date=None, jira_p
             if  issue.fields.components:
                 components = [i.name for i in issue.fields.components]
             print("{} - {}, {}, {}".format(issue.key, issue.fields.summary,components , issue.fields.reporter))
+    if not issues:
+        print("No data found")
     #status changed from "In Progress" to "Integration" during (2024-05-01,now())
     print("-"*20)
     print("issue status change from 'In Progress' to 'Integration' which 'QA Contact' are {}".format(names))
-    print("-"*20)
     jql_str = 'status changed from "In Progress" to "Integration" during ({},{})'.format(start_date, end_date)
     if names:
         converted = tuple(names.split(','))
@@ -272,16 +276,18 @@ def query_jira(jira_url=None, names=None, start_date=None, end_date=None, jira_p
         if len(converted) == 1:
             jql_str = jql_str.replace(',','')
     print("jql_str:{}".format(jql_str))
+    print("-"*20)
     issues = jira_session.search_issues(jql_str)
     for issue in issues:
         components = []
         if  issue.fields.components:
             components = [i.name for i in issue.fields.components]
         print("{} - {}, {}, reporter: {} QA:{}".format(issue.key, issue.fields.summary,components , issue.fields.reporter,issue.fields.customfield_12315948))
+    if not issues:
+        print("No data found")
     #status changed from "In Progress" to "Integration" during (2024-05-01,now())
     print("-"*20)
     print("issue status change from 'Integration' to 'Release Pending' which 'QA Contact' are {}".format(names))
-    print("-"*20)
     jql_str = 'status changed from "Integration" to "Release Pending" during ({},{})'.format(start_date, end_date)
     if names:
         converted = tuple(names.split(','))
@@ -292,12 +298,15 @@ def query_jira(jira_url=None, names=None, start_date=None, end_date=None, jira_p
         if len(converted) == 1:
             jql_str = jql_str.replace(',','')
     print("jql_str:{}".format(jql_str))
+    print("-"*20)
     issues = jira_session.search_issues(jql_str)
     for issue in issues:
         components = []
         if  issue.fields.components:
             components = [i.name for i in issue.fields.components]
         print("{} - {}, {}, reporter: {} QA:{}".format(issue.key, issue.fields.summary,components , issue.fields.reporter,issue.fields.customfield_12315948))
+    if not issues:
+        print("No data found")
 
 def main():
     cfg_file_tmpl = os.path.dirname(tipset.__file__) + "/cfg/aws_reportportal_sum.yaml"

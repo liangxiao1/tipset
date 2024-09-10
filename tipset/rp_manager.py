@@ -116,7 +116,10 @@ class Launch():
     
         self.headers['content-type'] = h
         req_url = "{}/api/v1/{}/launch/import?".format(self.rp_url,self.rp_project,urlencode(param_data))
-        ret = url_opt(req_url, data=post_data, headers=self.headers, method='POST', print_ret=False)
+        try:
+            ret = url_opt(req_url, data=post_data, headers=self.headers, method='POST', print_ret=False)
+        except Exception as exc:
+            shutil.rmtree(tmp_dir)
         self.uuid = re.findall('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', ret.get('message'),re.I)[0]
         if self.uuid:
             print(self.uuid)
