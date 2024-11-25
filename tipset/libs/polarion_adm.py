@@ -88,7 +88,7 @@ class PolarionCase:
             tc.caselevel= self.casedoc.get("test_level") or "component"
             tc.caseautomation=self.casedoc.get("automation_drop_down") or "automated"
             tc.caseposneg="positive"
-            tc.subsystemteam=self.casedoc.get("subsystem_team") or "sst_virtualization_cloud"
+            tc.subsystemteam=self.casedoc.get("subsystem_team") or "rhel-sst-virtualization-cloud"
             tc.testtype = "functional"
             if self.casedoc.get("test_type"):
                 tc.testtype = self.casedoc.get("test_type").lower()
@@ -191,7 +191,7 @@ class PolarionCase:
         tc.caselevel = _update_item(tc.caselevel, "test_level", 'component')
         tc.caseautomation = _update_item(tc.caselevel, "automation_drop_down", 'automated')
         tc.caseposneg="positive"
-        tc.subsystemteam = _update_item(tc.subsystemteam, "subsystem_team", "sst_virtualization_cloud")
+        tc.subsystemteam = _update_item(tc.subsystemteam, "subsystem_team", "rhel-sst-virtualization-cloud")
         tc.testtype = _update_item( tc.testtype, "test_type", "functional")
         #tc.hyperlinks= _update_item( tc.hyperlinks, "automation_field", "")
     
@@ -298,7 +298,7 @@ def verify_doc(casedoc=None):
                     {
                         'name':'subsystem_team',
                         'is_must':True,
-                        'default':'sst_virtualization_cloud',
+                        'default':'rhel-sst-virtualization-cloud',
                         'et_require':True
                     },
                     {
