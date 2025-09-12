@@ -38,7 +38,8 @@ setuptools.setup(
                  'aws_reportportal_sum = tipset.aws_reportportal_sum:main',
                  'polarion_adm = tipset.libs.polarion_adm:main',
                  'rhcert_manager = tipset.rhcert_manager:main',
-                 'rp_manager = tipset.rp_manager:main'
+                 'rp_manager = tipset.rp_manager:main',
+                 'polarion_tc = tipset.libs.polarion_tc:main'
              ],
          },
 )
